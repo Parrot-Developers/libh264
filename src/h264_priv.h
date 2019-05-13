@@ -64,6 +64,8 @@ struct h264_ctx {
 		enum h264_nalu_type type;
 		struct h264_nalu_header hdr;
 		int unknown;
+		int is_first_vcl;
+		int is_prev_vcl;
 	} nalu;
 
 	struct h264_aud aud;
@@ -99,6 +101,9 @@ struct h264_ctx {
 		uint32_t *group_map;
 		size_t group_map_maxlen;
 
+		/* For AU change detection */
+		struct h264_nalu_header prev_slice_nalu_hdr;
+		struct h264_slice_header prev_slice_hdr;
 	} slice;
 
 	struct h264_macroblock _mb;

@@ -659,7 +659,7 @@ struct h264_sei {
 };
 
 
-/* Derived from sps */
+/* Derived from SPS */
 struct h264_sps_derived {
 	uint32_t ChromaArrayType;
 	uint32_t SubWidthC;
@@ -684,6 +684,59 @@ struct h264_sps_derived {
 
 	uint32_t Width;
 	uint32_t Height;
+};
+
+
+/* Extra info from SPS & PPS */
+struct h264_info {
+	/* Picture width in pixels */
+	uint32_t width;
+
+	/* Picture height in pixels */
+	uint32_t height;
+
+	/* Source aspect ratio width (1 if unknown) */
+	uint32_t sar_width;
+
+	/* Source aspect ratio width (1 if unknown) */
+	uint32_t sar_height;
+
+	/* Left crop in pixels */
+	uint32_t crop_left;
+
+	/* Top crop in pixels */
+	uint32_t crop_top;
+
+	/* Crop width in pixels (equal to picture width if no crop) */
+	uint32_t crop_width;
+
+	/* Crop height in pixels (equal to picture height if no crop) */
+	uint32_t crop_height;
+
+	/* Full range flag */
+	int full_range;
+
+	/* Number of time units of a clock tick (0 if unknown) */
+	uint32_t num_units_in_tick;
+
+	/* Number of time units in one second (0 if unknown) */
+	uint32_t time_scale;
+
+	/* Declared framerate from time_scale and num_units_in_tick
+	 * (0 if unknown) */
+	float framerate;
+
+	/* NAL HRD bitrate (0 if unknown) */
+	uint32_t nal_hrd_bitrate;
+
+	/* NAL HRD CPB size (0 if unknown) */
+	uint32_t nal_hrd_cpb_size;
+
+	/* VCL HRD bitrate (0 if unknown) */
+	uint32_t vcl_hrd_bitrate;
+
+	/* VCL HRD CPB size (0 if unknown) */
+	uint32_t vcl_hrd_cpb_size;
 };
 
 

@@ -1530,6 +1530,27 @@ static int H264_SYNTAX_FCT(nalu)(struct h264_bitstream *bs,
 		break;
 	}
 
+#if H264_SYNTAX_OP_KIND == H264_SYNTAX_OP_KIND_READ
+	/* 7.4.1.2.4 Access unit change detection */
+	if ((ctx->nalu.is_prev_vcl) &&
+	    ((ctx->nalu.type == H264_NALU_TYPE_AUD) ||
+	     (ctx->nalu.type == H264_NALU_TYPE_SPS) ||
+	     (ctx->nalu.type == H264_NALU_TYPE_PPS) ||
+	     (ctx->nalu.type == H264_NALU_TYPE_SEI) ||
+	     (((unsigned)ctx->nalu.type >= 14) &&
+	      ((unsigned)ctx->nalu.type <= 18)) ||
+	     (ctx->nalu.is_first_vcl))) {
+		H264_CB(ctx, cbs, userdata, au_end);
+	}
+
+	if ((ctx->nalu.type != H264_NALU_TYPE_SLICE) &&
+	    (ctx->nalu.type != H264_NALU_TYPE_SLICE_IDR)) {
+		ctx->nalu.is_prev_vcl = 0;
+	} else {
+		ctx->nalu.is_prev_vcl = 1;
+	}
+#endif
+
 	H264_CB(ctx, cbs, userdata, nalu_end, ctx->nalu.type, buf, len);
 
 	return res;

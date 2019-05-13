@@ -63,6 +63,13 @@ int h264_get_sps_derived(const struct h264_sps *sps,
 			 struct h264_sps_derived *sps_derived);
 
 
+H264_API int h264_get_info(const uint8_t *sps,
+			   size_t sps_len,
+			   const uint8_t *pps,
+			   size_t pps_len,
+			   struct h264_info *info);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

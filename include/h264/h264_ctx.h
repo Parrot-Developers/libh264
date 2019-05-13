@@ -32,6 +32,20 @@ struct h264_ctx;
 
 
 struct h264_ctx_cbs {
+	/* Warning: this function is called after the nalu_begin(), slice*(),
+	 * sps(), pps(), aud() and sei*() callback functions for the first NAL
+	 * unit of the next AU, but before the nalu_end() callback function
+	 * for the first NAL unit of the next AU is called:
+	 * - nalu_begin(NALU 1 of frame n+1)
+	 * - then <other_cbs: sps,pps,slice,etc>(NALU 1 of frame n+1)
+	 * - then au_end(frame n)
+	 * - then nalu_end(NALU 1 of frame n+1)
+	 * Warning: this function will not be called for the last AU of a
+	 * bitstream, as no subsequent NAL units are available for AU change
+	 * detection.
+	 */
+	void (*au_end)(struct h264_ctx *ctx, void *userdata);
+
 	void (*nalu_begin)(struct h264_ctx *ctx,
 			   enum h264_nalu_type type,
 			   const uint8_t *buf,
@@ -187,6 +201,16 @@ int h264_ctx_add_sei(struct h264_ctx *ctx, const struct h264_sei *sei);
 
 H264_API
 int h264_ctx_get_sei_count(struct h264_ctx *ctx);
+
+
+H264_API uint64_t
+h264_ctx_sei_pic_timing_to_ts(struct h264_ctx *ctx,
+			      const struct h264_sei_pic_timing *sei);
+
+
+H264_API uint64_t
+h264_ctx_sei_pic_timing_to_us(struct h264_ctx *ctx,
+			      const struct h264_sei_pic_timing *sei);
 
 
 H264_API

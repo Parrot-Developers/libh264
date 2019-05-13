@@ -102,6 +102,68 @@ static void h264_ctx_update_derived_vars_slice(struct h264_ctx *ctx)
 }
 
 
+/**
+ * 7.4.1.2.4 Detection of the first VCL NAL unit of a primary coded picture
+ */
+static void h264_ctx_detect_first_vcl_nalu(struct h264_ctx *ctx)
+{
+	const struct h264_sps *sps = ctx->sps;
+	const struct h264_nalu_header *nh = &ctx->nalu.hdr;
+	const struct h264_slice_header *sh = &ctx->slice.hdr;
+
+	ctx->nalu.is_first_vcl = 0;
+
+	if (!ctx->nalu.is_prev_vcl) {
+		ctx->nalu.is_first_vcl = 1;
+		goto out;
+	}
+
+	if ((sh->pic_parameter_set_id !=
+	     ctx->slice.prev_slice_hdr.pic_parameter_set_id) ||
+	    (sh->field_pic_flag != ctx->slice.prev_slice_hdr.field_pic_flag) ||
+	    (!nh->nal_ref_idc != !ctx->slice.prev_slice_nalu_hdr.nal_ref_idc)) {
+		ctx->nalu.is_first_vcl = 1;
+		goto out;
+	}
+	if (((nh->nal_unit_type == H264_NALU_TYPE_SLICE_IDR) ||
+	     (ctx->slice.prev_slice_nalu_hdr.nal_unit_type ==
+	      H264_NALU_TYPE_SLICE_IDR)) &&
+	    ((nh->nal_unit_type !=
+	      ctx->slice.prev_slice_nalu_hdr.nal_unit_type) ||
+	     (sh->idr_pic_id != ctx->slice.prev_slice_hdr.idr_pic_id))) {
+		ctx->nalu.is_first_vcl = 1;
+		goto out;
+	}
+	if ((sps->pic_order_cnt_type == 0) &&
+	    ((sh->pic_order_cnt_lsb !=
+	      ctx->slice.prev_slice_hdr.pic_order_cnt_lsb) ||
+	     (sh->delta_pic_order_cnt_bottom !=
+	      ctx->slice.prev_slice_hdr.delta_pic_order_cnt_bottom))) {
+		ctx->nalu.is_first_vcl = 1;
+		goto out;
+	}
+	if ((sps->pic_order_cnt_type == 1) &&
+	    ((sh->delta_pic_order_cnt[0] !=
+	      ctx->slice.prev_slice_hdr.delta_pic_order_cnt[0]) ||
+	     (sh->delta_pic_order_cnt[1] !=
+	      ctx->slice.prev_slice_hdr.delta_pic_order_cnt[1]))) {
+		ctx->nalu.is_first_vcl = 1;
+		goto out;
+	}
+	if ((!sps->frame_mbs_only_flag) && (sh->field_pic_flag) &&
+	    (ctx->slice.prev_slice_hdr.field_pic_flag) &&
+	    (sh->bottom_field_flag !=
+	     ctx->slice.prev_slice_hdr.bottom_field_flag)) {
+		ctx->nalu.is_first_vcl = 1;
+		goto out;
+	}
+
+out:
+	ctx->slice.prev_slice_nalu_hdr = *nh;
+	ctx->slice.prev_slice_hdr = *sh;
+}
+
+
 int h264_ctx_new(struct h264_ctx **ret_obj)
 {
 	struct h264_ctx *ctx = NULL;
@@ -146,7 +208,10 @@ int h264_ctx_clear(struct h264_ctx *ctx)
 int h264_ctx_clear_nalu(struct h264_ctx *ctx)
 {
 	ULOG_ERRNO_RETURN_ERR_IF(ctx == NULL, EINVAL);
+	/* Save and restore is_prev_vcl */
+	int is_prev_vcl = ctx->nalu.is_prev_vcl;
 	memset(&ctx->nalu, 0, sizeof(ctx->nalu));
+	ctx->nalu.is_prev_vcl = is_prev_vcl;
 	memset(&ctx->aud, 0, sizeof(ctx->aud));
 	/* Keep current SPS/PPS */
 	h264_ctx_clear_sei_table(ctx);
@@ -354,6 +419,60 @@ int h264_ctx_get_sei_count(struct h264_ctx *ctx)
 }
 
 
+uint64_t h264_ctx_sei_pic_timing_to_ts(struct h264_ctx *ctx,
+				       const struct h264_sei_pic_timing *sei)
+{
+	uint64_t clock_timestamp;
+	const struct h264_sps *sps;
+
+	ULOG_ERRNO_RETURN_VAL_IF(ctx == NULL, EINVAL, 0);
+	ULOG_ERRNO_RETURN_VAL_IF(sei == NULL, EINVAL, 0);
+
+	sps = ctx->sps;
+	ULOG_ERRNO_RETURN_VAL_IF(sps->vui.time_scale == 0, EPROTO, 0);
+	ULOG_ERRNO_RETURN_VAL_IF(sps->vui.num_units_in_tick == 0, EPROTO, 0);
+
+	clock_timestamp =
+		(((uint64_t)sei->clk_ts[0].hours_value * 60 +
+		  sei->clk_ts[0].minutes_value) *
+			 60 +
+		 sei->clk_ts[0].seconds_value) *
+			sps->vui.time_scale +
+		((uint64_t)sei->clk_ts[0].n_frames *
+		 ((uint64_t)sps->vui.num_units_in_tick *
+		  (1 + (uint64_t)sei->clk_ts[0].nuit_field_based_flag)));
+
+	if (sei->clk_ts[0].time_offset < 0 &&
+	    ((uint64_t)-sei->clk_ts[0].time_offset > clock_timestamp))
+		clock_timestamp = 0;
+	else
+		clock_timestamp += sei->clk_ts[0].time_offset;
+
+	return clock_timestamp;
+}
+
+
+uint64_t h264_ctx_sei_pic_timing_to_us(struct h264_ctx *ctx,
+				       const struct h264_sei_pic_timing *sei)
+{
+	uint64_t clock_timestamp, clock_timestamp_us;
+	const struct h264_sps *sps;
+
+	ULOG_ERRNO_RETURN_VAL_IF(ctx == NULL, EINVAL, 0);
+	ULOG_ERRNO_RETURN_VAL_IF(sei == NULL, EINVAL, 0);
+
+	sps = ctx->sps;
+	ULOG_ERRNO_RETURN_VAL_IF(sps->vui.time_scale == 0, EPROTO, 0);
+	clock_timestamp = h264_ctx_sei_pic_timing_to_ts(ctx, sei);
+
+	clock_timestamp_us =
+		(clock_timestamp * 1000000 + sps->vui.time_scale / 2) /
+		sps->vui.time_scale;
+
+	return clock_timestamp_us;
+}
+
+
 int h264_ctx_clear_slice(struct h264_ctx *ctx)
 {
 	ULOG_ERRNO_RETURN_ERR_IF(ctx == NULL, EINVAL);
@@ -381,5 +500,6 @@ int h264_ctx_set_slice_header(struct h264_ctx *ctx,
 	ctx->slice.type = H264_SLICE_TYPE(sh->slice_type);
 	ctx->slice.hdr = *sh;
 	h264_ctx_update_derived_vars_slice(ctx);
+	h264_ctx_detect_first_vcl_nalu(ctx);
 	return 0;
 }
