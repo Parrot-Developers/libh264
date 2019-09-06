@@ -88,6 +88,10 @@ H264_API
 int h264_bs_more_rbsp_data(const struct h264_bitstream *bs);
 
 
+H264_API int
+h264_bs_next_bits(const struct h264_bitstream *bs, uint32_t *v, uint32_t n);
+
+
 H264_API
 int h264_bs_read_rbsp_trailing_bits(struct h264_bitstream *bs);
 
@@ -155,7 +159,7 @@ static inline int h264_bs_eos(const struct h264_bitstream *bs)
 }
 
 
-static inline uint32_t h264_bs_rem_raw_bits(const struct h264_bitstream *bs)
+static inline size_t h264_bs_rem_raw_bits(const struct h264_bitstream *bs)
 {
 	return (bs->len - bs->off) * 8 + bs->cachebits;
 }

@@ -352,6 +352,15 @@ int h264_bs_more_rbsp_data(const struct h264_bitstream *bs)
 }
 
 
+int h264_bs_next_bits(const struct h264_bitstream *bs, uint32_t *v, uint32_t n)
+{
+	/* Use a temp stream */
+	struct h264_bitstream bs2 = *bs;
+
+	return h264_bs_read_bits(&bs2, v, n);
+}
+
+
 /**
  * 7.3.2.11 RBSP trailing bits syntax
  */

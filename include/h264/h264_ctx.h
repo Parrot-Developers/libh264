@@ -50,12 +50,14 @@ struct h264_ctx_cbs {
 			   enum h264_nalu_type type,
 			   const uint8_t *buf,
 			   size_t len,
+			   const struct h264_nalu_header *nh,
 			   void *userdata);
 
 	void (*nalu_end)(struct h264_ctx *ctx,
 			 enum h264_nalu_type type,
 			 const uint8_t *buf,
 			 size_t len,
+			 const struct h264_nalu_header *nh,
 			 void *userdata);
 
 	void (*slice)(struct h264_ctx *ctx,
@@ -188,6 +190,10 @@ int h264_ctx_set_pps(struct h264_ctx *ctx, const struct h264_pps *pps);
 
 
 H264_API
+int h264_ctx_set_filler(struct h264_ctx *ctx, size_t len);
+
+
+H264_API
 const struct h264_sps *h264_ctx_get_sps(struct h264_ctx *ctx);
 
 
@@ -216,6 +222,9 @@ h264_ctx_sei_pic_timing_to_us(struct h264_ctx *ctx,
 H264_API
 int h264_ctx_set_slice_header(struct h264_ctx *ctx,
 			      const struct h264_slice_header *sh);
+
+
+H264_API int h264_ctx_get_info(struct h264_ctx *ctx, struct h264_info *info);
 
 
 #endif /* !_H264_CTX_H_ */

@@ -27,6 +27,28 @@
 #include "h264_priv.h"
 
 
+/* E.2.1 "aspect_ratio_idc" */
+static const unsigned int h264_sar[17][2] = {
+	{1, 1},
+	{1, 1},
+	{12, 11},
+	{10, 11},
+	{16, 11},
+	{40, 33},
+	{24, 11},
+	{20, 11},
+	{32, 11},
+	{80, 33},
+	{18, 11},
+	{15, 11},
+	{64, 33},
+	{160, 99},
+	{4, 3},
+	{3, 2},
+	{2, 1},
+};
+
+
 /**
  * 6.2 Source, decoded, and output picture formats
  * 7.4.2.1.1 Sequence parameter set data semantics
@@ -113,27 +135,50 @@ static void h264_ctx_detect_first_vcl_nalu(struct h264_ctx *ctx)
 
 	ctx->nalu.is_first_vcl = 0;
 
-	if (!ctx->nalu.is_prev_vcl) {
+	if ((!ctx->nalu.is_prev_vcl) && (!ctx->nalu.is_prev_filler)) {
 		ctx->nalu.is_first_vcl = 1;
 		goto out;
 	}
 
-	if ((sh->pic_parameter_set_id !=
-	     ctx->slice.prev_slice_hdr.pic_parameter_set_id) ||
-	    (sh->field_pic_flag != ctx->slice.prev_slice_hdr.field_pic_flag) ||
-	    (!nh->nal_ref_idc != !ctx->slice.prev_slice_nalu_hdr.nal_ref_idc)) {
+	/* frame_num differs in value. */
+	if (sh->frame_num != ctx->slice.prev_slice_hdr.frame_num) {
 		ctx->nalu.is_first_vcl = 1;
 		goto out;
 	}
-	if (((nh->nal_unit_type == H264_NALU_TYPE_SLICE_IDR) ||
-	     (ctx->slice.prev_slice_nalu_hdr.nal_unit_type ==
-	      H264_NALU_TYPE_SLICE_IDR)) &&
-	    ((nh->nal_unit_type !=
-	      ctx->slice.prev_slice_nalu_hdr.nal_unit_type) ||
-	     (sh->idr_pic_id != ctx->slice.prev_slice_hdr.idr_pic_id))) {
+
+	/* pic_parameter_set_id differs in value. */
+	if (sh->pic_parameter_set_id !=
+	    ctx->slice.prev_slice_hdr.pic_parameter_set_id) {
 		ctx->nalu.is_first_vcl = 1;
 		goto out;
 	}
+
+	/* field_pic_flag differs in value. */
+	if (!sps->frame_mbs_only_flag &&
+	    (sh->field_pic_flag != ctx->slice.prev_slice_hdr.field_pic_flag)) {
+		ctx->nalu.is_first_vcl = 1;
+		goto out;
+	}
+
+	/* bottom_field_flag is present in both and differs in value. */
+	if (!sps->frame_mbs_only_flag && sh->field_pic_flag &&
+	    ctx->slice.prev_slice_hdr.field_pic_flag &&
+	    (sh->bottom_field_flag !=
+	     ctx->slice.prev_slice_hdr.bottom_field_flag)) {
+		ctx->nalu.is_first_vcl = 1;
+		goto out;
+	}
+
+	/* nal_ref_idc differs in value with one of the nal_ref_idc
+	 * values being equal to 0. */
+	if (!nh->nal_ref_idc != !ctx->slice.prev_slice_nalu_hdr.nal_ref_idc) {
+		ctx->nalu.is_first_vcl = 1;
+		goto out;
+	}
+
+	/* pic_order_cnt_type is equal to 0 for both and either
+	 * pic_order_cnt_lsb differs in value, or delta_pic_order_cnt_bottom
+	 * differs in value. */
 	if ((sps->pic_order_cnt_type == 0) &&
 	    ((sh->pic_order_cnt_lsb !=
 	      ctx->slice.prev_slice_hdr.pic_order_cnt_lsb) ||
@@ -142,6 +187,10 @@ static void h264_ctx_detect_first_vcl_nalu(struct h264_ctx *ctx)
 		ctx->nalu.is_first_vcl = 1;
 		goto out;
 	}
+
+	/* pic_order_cnt_type is equal to 1 for both and either
+	 * delta_pic_order_cnt[ 0 ] differs in value, or
+	 * delta_pic_order_cnt[ 1 ] differs in value. */
 	if ((sps->pic_order_cnt_type == 1) &&
 	    ((sh->delta_pic_order_cnt[0] !=
 	      ctx->slice.prev_slice_hdr.delta_pic_order_cnt[0]) ||
@@ -150,10 +199,20 @@ static void h264_ctx_detect_first_vcl_nalu(struct h264_ctx *ctx)
 		ctx->nalu.is_first_vcl = 1;
 		goto out;
 	}
-	if ((!sps->frame_mbs_only_flag) && (sh->field_pic_flag) &&
-	    (ctx->slice.prev_slice_hdr.field_pic_flag) &&
-	    (sh->bottom_field_flag !=
-	     ctx->slice.prev_slice_hdr.bottom_field_flag)) {
+
+	/* IdrPicFlag differs in value. */
+	if ((nh->nal_unit_type == H264_NALU_TYPE_SLICE_IDR) !=
+	    (ctx->slice.prev_slice_nalu_hdr.nal_unit_type ==
+	     H264_NALU_TYPE_SLICE_IDR)) {
+		ctx->nalu.is_first_vcl = 1;
+		goto out;
+	}
+
+	/* IdrPicFlag is equal to 1 for both and idr_pic_id differs in value. */
+	if ((nh->nal_unit_type == H264_NALU_TYPE_SLICE_IDR) &&
+	    (ctx->slice.prev_slice_nalu_hdr.nal_unit_type ==
+	     H264_NALU_TYPE_SLICE_IDR) &&
+	    (sh->idr_pic_id != ctx->slice.prev_slice_hdr.idr_pic_id)) {
 		ctx->nalu.is_first_vcl = 1;
 		goto out;
 	}
@@ -208,10 +267,12 @@ int h264_ctx_clear(struct h264_ctx *ctx)
 int h264_ctx_clear_nalu(struct h264_ctx *ctx)
 {
 	ULOG_ERRNO_RETURN_ERR_IF(ctx == NULL, EINVAL);
-	/* Save and restore is_prev_vcl */
+	/* Save and restore is_prev_vcl and is_prev_filler */
 	int is_prev_vcl = ctx->nalu.is_prev_vcl;
+	int is_prev_filler = ctx->nalu.is_prev_filler;
 	memset(&ctx->nalu, 0, sizeof(ctx->nalu));
 	ctx->nalu.is_prev_vcl = is_prev_vcl;
+	ctx->nalu.is_prev_filler = is_prev_filler;
 	memset(&ctx->aud, 0, sizeof(ctx->aud));
 	/* Keep current SPS/PPS */
 	h264_ctx_clear_sei_table(ctx);
@@ -290,6 +351,14 @@ int h264_ctx_set_pps(struct h264_ctx *ctx, const struct h264_pps *pps)
 	h264_ctx_update_derived_vars_pps(ctx);
 	h264_ctx_update_derived_vars_slice(ctx);
 
+	return 0;
+}
+
+
+int h264_ctx_set_filler(struct h264_ctx *ctx, size_t len)
+{
+	ULOG_ERRNO_RETURN_ERR_IF(ctx == NULL, EINVAL);
+	ctx->filler_len = len;
 	return 0;
 }
 
@@ -502,4 +571,132 @@ int h264_ctx_set_slice_header(struct h264_ctx *ctx,
 	h264_ctx_update_derived_vars_slice(ctx);
 	h264_ctx_detect_first_vcl_nalu(ctx);
 	return 0;
+}
+
+
+int h264_get_info_from_ps(struct h264_sps *sps,
+			  struct h264_pps *pps,
+			  struct h264_sps_derived *sps_derived,
+			  struct h264_info *info)
+{
+	memset(info, 0, sizeof(*info));
+
+	info->width = sps_derived->PicWidthInSamplesLuma;
+	info->height = sps_derived->FrameHeightInMbs * 16;
+	info->bit_depth_luma = sps_derived->BitDepthLuma;
+	info->crop_left = 0;
+	info->crop_top = 0;
+	info->crop_width = info->width;
+	info->crop_height = info->height;
+	if (sps->frame_cropping_flag) {
+		info->crop_left =
+			sps->frame_crop_left_offset * sps_derived->CropUnitX;
+		info->crop_width = info->width - sps->frame_crop_right_offset *
+							 sps_derived->CropUnitX;
+		info->crop_top =
+			sps->frame_crop_top_offset * sps_derived->CropUnitY;
+		info->crop_height =
+			info->height -
+			sps->frame_crop_bottom_offset * sps_derived->CropUnitY;
+	}
+
+	info->sar_width = 1;
+	info->sar_height = 1;
+	if (sps->vui_parameters_present_flag) {
+		if (sps->vui.aspect_ratio_info_present_flag) {
+			if (sps->vui.aspect_ratio_idc ==
+			    H264_ASPECT_RATIO_EXTENDED_SAR) {
+				info->sar_width = sps->vui.sar_width;
+				info->sar_height = sps->vui.sar_height;
+			} else if (sps->vui.aspect_ratio_idc <= 16) {
+				info->sar_width =
+					h264_sar[sps->vui.aspect_ratio_idc][0];
+				info->sar_height =
+					h264_sar[sps->vui.aspect_ratio_idc][1];
+			}
+		}
+		info->full_range = sps->vui.video_full_range_flag;
+		if (sps->vui.colour_description_present_flag) {
+			info->colour_description_present = 1;
+			info->colour_primaries = sps->vui.colour_primaries;
+			info->transfer_characteristics =
+				sps->vui.transfer_characteristics;
+			info->matrix_coefficients =
+				sps->vui.matrix_coefficients;
+		} else {
+			/* No colour description present, set to default
+			 * values (2 means unspecified) */
+			info->colour_primaries = 2;
+			info->transfer_characteristics = 2;
+			info->matrix_coefficients = 2;
+		}
+		if (sps->vui.timing_info_present_flag) {
+			info->num_units_in_tick = sps->vui.num_units_in_tick;
+			info->time_scale = sps->vui.time_scale;
+			info->framerate =
+				(info->num_units_in_tick != 0)
+					? (float)info->time_scale / 2.f /
+						  info->num_units_in_tick
+					: 0.f;
+			info->framerate_num = info->time_scale;
+			info->framerate_den = info->num_units_in_tick;
+			if (info->framerate_num % 2 == 0)
+				info->framerate_num /= 2;
+			else
+				info->framerate_den *= 2;
+		}
+		if (sps->vui.nal_hrd_parameters_present_flag) {
+			info->nal_hrd_bitrate =
+				(sps->vui.nal_hrd.cpb[0].bit_rate_value_minus1 +
+				 1)
+				<< (6 + sps->vui.nal_hrd.bit_rate_scale);
+			info->nal_hrd_cpb_size =
+				(sps->vui.nal_hrd.cpb[0].cpb_size_value_minus1 +
+				 1)
+				<< (4 + sps->vui.nal_hrd.cpb_size_scale);
+		}
+		if (sps->vui.vcl_hrd_parameters_present_flag) {
+			info->vcl_hrd_bitrate =
+				(sps->vui.vcl_hrd.cpb[0].bit_rate_value_minus1 +
+				 1)
+				<< (6 + sps->vui.vcl_hrd.bit_rate_scale);
+			info->vcl_hrd_cpb_size =
+				(sps->vui.vcl_hrd.cpb[0].cpb_size_value_minus1 +
+				 1)
+				<< (4 + sps->vui.vcl_hrd.cpb_size_scale);
+		}
+	}
+
+	return 0;
+}
+
+
+int h264_ctx_get_info(struct h264_ctx *ctx, struct h264_info *info)
+{
+	ULOG_ERRNO_RETURN_ERR_IF(ctx == NULL, EINVAL);
+	ULOG_ERRNO_RETURN_ERR_IF(info == NULL, EINVAL);
+
+	if ((ctx->sps == NULL) || (ctx->pps == NULL))
+		return -EAGAIN;
+
+	return h264_get_info_from_ps(
+		ctx->sps, ctx->pps, &ctx->sps_derived, info);
+}
+
+
+int h264_sar_to_aspect_ratio_idc(unsigned int sar_width,
+				 unsigned int sar_height)
+{
+	unsigned int idx, found = 0;
+
+	/* Start at index 1 as 0 is 'unspecified' */
+	for (idx = 1; idx < ARRAY_SIZE(h264_sar); idx++) {
+		if ((h264_sar[idx][0] == sar_width) &&
+		    (h264_sar[idx][1] == sar_height)) {
+			found = 1;
+			break;
+		}
+	}
+
+	return found ? idx : H264_ASPECT_RATIO_EXTENDED_SAR;
 }

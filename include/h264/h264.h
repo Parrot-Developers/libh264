@@ -70,6 +70,18 @@ H264_API int h264_get_info(const uint8_t *sps,
 			   struct h264_info *info);
 
 
+H264_API int h264_sar_to_aspect_ratio_idc(unsigned int sar_width,
+					  unsigned int sar_height);
+
+
+/* Note: this function expects start code length to be 4 bytes;
+ * 3 bytes start codes are not supported */
+H264_API int h264_byte_stream_to_avcc(uint8_t *data, size_t len);
+
+
+H264_API int h264_avcc_to_byte_stream(uint8_t *data, size_t len);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

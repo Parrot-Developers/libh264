@@ -192,6 +192,7 @@ static void nalu_end_cb(struct h264_ctx *ctx,
 			enum h264_nalu_type type,
 			const uint8_t *buf,
 			size_t len,
+			const struct h264_nalu_header *nh,
 			void *userdata)
 {
 	int res = 0;

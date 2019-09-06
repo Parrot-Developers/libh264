@@ -21,7 +21,7 @@ LOCAL_SRC_FILES := \
 	src/h264_slice_data.c \
 	src/h264_types.c \
 	src/h264_writer.c
-LOCAL_LIBRARIES := \
+LOCAL_PRIVATE_LIBRARIES := \
 	json \
 	libulog
 include $(BUILD_LIBRARY)

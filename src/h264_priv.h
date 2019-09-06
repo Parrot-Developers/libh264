@@ -37,6 +37,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WIN32
+#	include <winsock2.h>
+#else /* !_WIN32 */
+#	include <arpa/inet.h>
+#endif /* !_WIN32 */
+
 #define ULOG_TAG h264
 #include <ulog.h>
 
@@ -66,6 +72,7 @@ struct h264_ctx {
 		int unknown;
 		int is_first_vcl;
 		int is_prev_vcl;
+		int is_prev_filler;
 	} nalu;
 
 	struct h264_aud aud;
@@ -78,6 +85,8 @@ struct h264_ctx {
 
 	struct h264_sei *sei_table;
 	uint32_t sei_count;
+
+	size_t filler_len;
 
 	struct {
 		enum h264_slice_type type;
@@ -145,6 +154,12 @@ int h264_ctx_add_sei_internal(struct h264_ctx *ctx, struct h264_sei **ret_obj);
 
 
 int h264_ctx_clear_slice(struct h264_ctx *ctx);
+
+
+int h264_get_info_from_ps(struct h264_sps *sps,
+			  struct h264_pps *pps,
+			  struct h264_sps_derived *sps_derived,
+			  struct h264_info *info);
 
 
 int h264_write_one_sei(struct h264_bitstream *bs,

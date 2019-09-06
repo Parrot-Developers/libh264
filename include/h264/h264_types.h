@@ -695,6 +695,9 @@ struct h264_info {
 	/* Picture height in pixels */
 	uint32_t height;
 
+	/* Luma bit depth */
+	uint8_t bit_depth_luma;
+
 	/* Source aspect ratio width (1 if unknown) */
 	uint32_t sar_width;
 
@@ -716,6 +719,19 @@ struct h264_info {
 	/* Full range flag */
 	int full_range;
 
+	/* 1: colour_primaries, transfer_characteristics and
+	 * matrix_coefficients are valid; 0 otherwise */
+	int colour_description_present;
+
+	/* Colour primaries */
+	uint32_t colour_primaries;
+
+	/* Transfer characteristics */
+	uint32_t transfer_characteristics;
+
+	/* Matrix coefficients */
+	uint32_t matrix_coefficients;
+
 	/* Number of time units of a clock tick (0 if unknown) */
 	uint32_t num_units_in_tick;
 
@@ -725,6 +741,14 @@ struct h264_info {
 	/* Declared framerate from time_scale and num_units_in_tick
 	 * (0 if unknown) */
 	float framerate;
+
+	/* Declared framerate from time_scale and num_units_in_tick
+	 * (0 if unknown) - numerator */
+	uint32_t framerate_num;
+
+	/* Declared framerate from time_scale and num_units_in_tick
+	 * (0 if unknown) - denominator */
+	uint32_t framerate_den;
 
 	/* NAL HRD bitrate (0 if unknown) */
 	uint32_t nal_hrd_bitrate;

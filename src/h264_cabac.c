@@ -29,8 +29,7 @@
 /* codecheck_ignore_file[GCC_BINARY_CONSTANT] */
 
 /* clang-format off */
-/* codecheck_ignore[COMPLEX_MACRO] */
-#define CHECK(_x) if ((res = (_x)) < 0) goto out
+#define CHECK(_x) do { if ((res = (_x)) < 0) goto out; } while (0)
 /* clang-format on */
 
 #if 0

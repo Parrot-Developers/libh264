@@ -985,6 +985,30 @@ static int H264_SYNTAX_FCT(aud)(struct h264_bitstream *bs,
 
 
 /**
+ * 7.3.2.7 Filler data RBSP syntax
+ */
+static int H264_SYNTAX_FCT(filler)(struct h264_bitstream *bs, size_t *len)
+{
+#if H264_SYNTAX_OP_KIND == H264_SYNTAX_OP_KIND_WRITE
+	uint32_t ff_byte = 0xFF;
+	for (size_t i = 0; i < *len; i++)
+		H264_BITS(ff_byte, 8);
+#elif H264_SYNTAX_OP_KIND == H264_SYNTAX_OP_KIND_READ
+	*len = 0;
+	uint32_t ff_byte = 0;
+	int res = h264_bs_next_bits(bs, &ff_byte, 8);
+	while ((res == 8) && (ff_byte == 0xFF)) {
+		H264_BITS(ff_byte, 8);
+		*len = *len + 1;
+		res = h264_bs_next_bits(bs, &ff_byte, 8);
+	}
+#endif
+	H264_BITS_RBSP_TRAILING();
+	return 0;
+}
+
+
+/**
  * 7.3.3.1 Reference picture list modification syntax
  * H.7.3.3.1.1 Reference picture list MVC modification syntax
  */
@@ -1442,7 +1466,14 @@ static int H264_SYNTAX_FCT(nalu)(struct h264_bitstream *bs,
 	ULOG_ERRNO_RETURN_ERR_IF(res < 0, -res);
 	ctx->nalu.type = ctx->nalu.hdr.nal_unit_type;
 
-	H264_CB(ctx, cbs, userdata, nalu_begin, ctx->nalu.type, buf, len);
+	H264_CB(ctx,
+		cbs,
+		userdata,
+		nalu_begin,
+		ctx->nalu.type,
+		buf,
+		len,
+		&ctx->nalu.hdr);
 
 	switch (ctx->nalu.type) {
 	case H264_NALU_TYPE_SLICE:
@@ -1524,6 +1555,15 @@ static int H264_SYNTAX_FCT(nalu)(struct h264_bitstream *bs,
 		break;
 	}
 
+	case H264_NALU_TYPE_FILLER: {
+		ULOG_ERRNO_RETURN_ERR_IF(ctx->nalu.hdr.nal_ref_idc != 0, EIO);
+		H264_BEGIN_STRUCT(filler);
+		res = H264_SYNTAX_FCT(filler)(bs, &ctx->filler_len);
+		H264_END_STRUCT(filler);
+		ULOG_ERRNO_RETURN_ERR_IF(res < 0, -res);
+		break;
+	}
+
 	default:
 		/* TODO */
 		ctx->nalu.unknown = 1;
@@ -1532,7 +1572,7 @@ static int H264_SYNTAX_FCT(nalu)(struct h264_bitstream *bs,
 
 #if H264_SYNTAX_OP_KIND == H264_SYNTAX_OP_KIND_READ
 	/* 7.4.1.2.4 Access unit change detection */
-	if ((ctx->nalu.is_prev_vcl) &&
+	if (((ctx->nalu.is_prev_vcl) || (ctx->nalu.is_prev_filler)) &&
 	    ((ctx->nalu.type == H264_NALU_TYPE_AUD) ||
 	     (ctx->nalu.type == H264_NALU_TYPE_SPS) ||
 	     (ctx->nalu.type == H264_NALU_TYPE_PPS) ||
@@ -1549,9 +1589,17 @@ static int H264_SYNTAX_FCT(nalu)(struct h264_bitstream *bs,
 	} else {
 		ctx->nalu.is_prev_vcl = 1;
 	}
+	ctx->nalu.is_prev_filler = !!(ctx->nalu.type == H264_NALU_TYPE_FILLER);
 #endif
 
-	H264_CB(ctx, cbs, userdata, nalu_end, ctx->nalu.type, buf, len);
+	H264_CB(ctx,
+		cbs,
+		userdata,
+		nalu_end,
+		ctx->nalu.type,
+		buf,
+		len,
+		&ctx->nalu.hdr);
 
 	return res;
 }
