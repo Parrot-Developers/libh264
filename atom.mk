@@ -21,9 +21,15 @@ LOCAL_SRC_FILES := \
 	src/h264_slice_data.c \
 	src/h264_types.c \
 	src/h264_writer.c
+
 LOCAL_PRIVATE_LIBRARIES := \
 	json \
 	libulog
+
+ifeq ("$(TARGET_OS)","windows")
+  LOCAL_LDLIBS += -lws2_32
+endif
+
 include $(BUILD_LIBRARY)
 
 include $(CLEAR_VARS)
