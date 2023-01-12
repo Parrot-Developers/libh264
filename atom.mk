@@ -6,7 +6,7 @@ LOCAL_MODULE := libh264
 LOCAL_CATEGORY_PATH := libs
 LOCAL_DESCRIPTION := H.264 bitstream reader/writer library
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
-LOCAL_CFLAGS := -DH264_API_EXPORTS -fvisibility=hidden -std=gnu99
+LOCAL_CFLAGS := -DH264_API_EXPORTS -fvisibility=hidden -std=gnu99 -D_GNU_SOURCE
 LOCAL_SRC_FILES := \
 	src/h264.c \
 	src/h264_bac.c \

@@ -1136,9 +1136,9 @@ int h264_new_macroblock(struct h264_ctx *ctx,
 	memset(ctx->mb, 0, sizeof(*ctx->mb));
 	ctx->mb->mbAddr = mbAddr;
 	ctx->mb->mb_type = !skipped ? H264_MB_TYPE_UNKNOWN
-				    : ctx->slice.type == H264_SLICE_TYPE_B
-					      ? H264_MB_TYPE_B_SKIP
-					      : H264_MB_TYPE_P_SKIP;
+			   : ctx->slice.type == H264_SLICE_TYPE_B
+				   ? H264_MB_TYPE_B_SKIP
+				   : H264_MB_TYPE_P_SKIP;
 	h264_compute_neighbouring_macroblocks(ctx, ctx->mb);
 
 	/* Handle field flag */

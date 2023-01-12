@@ -656,10 +656,9 @@ time_offset:
 			/* clang-format on */
 			n = sps->vui.nal_hrd_parameters_present_flag
 				    ? sps->vui.nal_hrd.time_offset_length
-				    : sps->vui.vcl_hrd_parameters_present_flag
-					      ? sps->vui.vcl_hrd
-							.time_offset_length
-					      : 24;
+			    : sps->vui.vcl_hrd_parameters_present_flag
+				    ? sps->vui.vcl_hrd.time_offset_length
+				    : 24;
 			if (n > 0)
 				H264_BITS_I(sei->clk_ts[i].time_offset, n);
 			/* clang-format off */
