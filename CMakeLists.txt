@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 project(libh264 VERSION 1.0)
 
-add_library(h264_compiler_flags INTERFACE)
-target_compile_features(h264_compiler_flags INTERFACE cxx_std_11)
-
 set(LIB_SOURCES
       src/h264.c
       src/h264_bac.c
@@ -30,8 +27,10 @@ target_include_directories(h264 PUBLIC
 )
 
 target_compile_definitions(h264 PRIVATE "H264_API_EXPORTS")
-target_compile_definitions(h264 PRIVATE "H_GNU_SOURCE")
+target_compile_definitions(h264 PRIVATE "_GNU_SOURCE")
 target_compile_options(h264 PRIVATE "-fvisibility=hidden")
+target_compile_options(h264 PRIVATE "-std=gnu99")
+
 
 if(WIN32)
   target_link_libraries(h264 ws2_32)
@@ -39,4 +38,4 @@ endif()
 
 find_package(json-c CONFIG REQUIRED)
 target_link_libraries(h264 json-c::json-c json-c::json-c-static)
-target_link_libraries(h264 ulog h264_compiler_flags)
+target_link_libraries(h264 ulog)
