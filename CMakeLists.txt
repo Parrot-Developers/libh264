@@ -36,9 +36,9 @@ target_compile_options(h264 PRIVATE "-std=gnu99")
 
 
 if(WIN32)
-  target_link_libraries(h264 ws2_32)
+  target_link_libraries(h264 PRIVATE ws2_32)
 endif()
 
 find_package(json-c CONFIG REQUIRED)
-target_link_libraries(h264 json-c::json-c)
-target_link_libraries(h264 ulog)
+target_link_libraries(h264 PRIVATE json-c::json-c)
+target_link_libraries(h264 PRIVATE ulog)
