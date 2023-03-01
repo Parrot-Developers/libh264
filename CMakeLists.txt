@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.15)
 project(h264 VERSION 1.0)
 
+# checks if set up rpath exists for install
+if(COMMAND set_up_rpath)
+    set_up_rpath()
+else()
+    message("Set up rpath not defined!")
+endif()
+
 set(LIB_SOURCES
       src/h264.c
       src/h264_bac.c
@@ -38,6 +45,7 @@ endif()
 
 find_package(json-c CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} 
+                      PRIVATE
                       json-c::json-c 
                       json-c::json-c-static
                       ulog)
@@ -46,7 +54,6 @@ target_link_libraries(${PROJECT_NAME}
 set(${PROJECT_NAME}-headers
     ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}/
 )
-
 
 
 install(TARGETS ${PROJECT_NAME}
