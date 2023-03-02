@@ -39,16 +39,23 @@ target_compile_options(${PROJECT_NAME} PRIVATE "-fvisibility=hidden")
 target_compile_options(${PROJECT_NAME} PRIVATE "-std=gnu99")
 
 
-if(WIN32)
-  target_link_libraries(${PROJECT_NAME} ws2_32)
-endif()
-
 find_package(json-c CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} 
+if(WIN32)
+  target_link_libraries(${PROJECT_NAME} 
+                      PRIVATE
+                      json-c::json-c 
+                      json-c::json-c-static
+                      ulog 
+                      ws2_32)
+else()
+  target_link_libraries(${PROJECT_NAME} 
                       PRIVATE
                       json-c::json-c 
                       json-c::json-c-static
                       ulog)
+
+endif()
+
 
 
 set(${PROJECT_NAME}-headers
