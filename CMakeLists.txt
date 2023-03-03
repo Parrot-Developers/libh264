@@ -51,6 +51,15 @@ if(WIN32)
                       json-c::json-c-static
                       ulog 
                       ws2_32)
+
+if(COMMAND install_add_imported_dlls)
+	list(APPEND targets json-c::json-c json-c::json-c-static)
+	message(${targets})
+  install_add_imported_dlls(${targets} bin bin)
+else()
+    message("install add imported dlls not defined!")
+endif()
+
 else()
   target_link_libraries(${PROJECT_NAME} 
                       PRIVATE
@@ -78,3 +87,4 @@ install(TARGETS ${PROJECT_NAME}
 install(
     DIRECTORY ${${PROJECT_NAME}-headers} DESTINATION include/${PROJECT_NAME}
 )
+
