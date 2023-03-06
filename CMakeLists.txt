@@ -48,7 +48,6 @@ if(WIN32)
   target_link_libraries(${PROJECT_NAME} 
                       PRIVATE
                       json-c::json-c 
-                      json-c::json-c-static
                       ulog 
                       ws2_32)
 
@@ -64,7 +63,6 @@ else()
   target_link_libraries(${PROJECT_NAME} 
                       PRIVATE
                       json-c::json-c 
-                      json-c::json-c-static
                       ulog)
 
 endif()
