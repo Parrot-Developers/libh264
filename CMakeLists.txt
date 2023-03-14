@@ -18,7 +18,7 @@ set(LIB_SOURCES
       src/h264_writer.c
 )
 
-add_library(${PROJECT_NAME} ${LIB_SOURCES})
+add_library(${PROJECT_NAME} SHARED ${LIB_SOURCES})
 
 # checks if set up rpath exists for install
 if(COMMAND set_up_rpath)
@@ -28,7 +28,7 @@ else()
 endif()
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
-set_target_properties(h264 PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
                     POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
 )
 
@@ -45,25 +45,40 @@ target_compile_options(${PROJECT_NAME} PRIVATE "-std=gnu99")
 
 find_package(json-c CONFIG REQUIRED)
 if(WIN32)
-  target_link_libraries(${PROJECT_NAME} 
+    target_link_libraries(${PROJECT_NAME} 
                       PRIVATE
                       json-c::json-c 
                       ulog 
                       ws2_32)
 
-if(COMMAND install_add_imported_dlls)
-	list(APPEND targets json-c::json-c json-c::json-c-static)
-	message(${targets})
-  install_add_imported_dlls(${targets} bin bin)
-else()
-    message("install add imported dlls not defined!")
-endif()
+    install(CODE "file(GLOB dll_files \"${CMAKE_CURRENT_BINARY_DIR}/*.dll\")")
+    install(CODE "file(INSTALL DESTINATION \"\$\{CMAKE_INSTALL_PREFIX\}/bin\" TYPE SHARED_LIBRARY FILES \$\{dll_files\})")
 
 else()
   target_link_libraries(${PROJECT_NAME} 
                       PRIVATE
-                      json-c::json-c 
+                      json-c::json-c
                       ulog)
+
+    install(CODE "set(DEPENDENCY_PATHS \"\$\<TARGET_FILE_DIR:json-c::json-c\>\")")
+
+    install(CODE [[
+        file(GET_RUNTIME_DEPENDENCIES
+            LIBRARIES $<TARGET_FILE:h264>
+            RESOLVED_DEPENDENCIES_VAR _r_deps
+            UNRESOLVED_DEPENDENCIES_VAR _u_deps
+            DIRECTORIES ${DEPENDENCY_PATHS}
+        )
+        foreach(_file ${_r_deps})
+            file(INSTALL
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+            TYPE SHARED_LIBRARY
+            FOLLOW_SYMLINK_CHAIN
+            FILES "${_file}"
+            )
+        endforeach()
+        list(LENGTH _u_deps _u_length)
+    ]])
 
 endif()
 
