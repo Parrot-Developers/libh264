@@ -60,14 +60,11 @@ else()
                       json-c::json-c
                       ulog)
 
-    install(CODE "set(DEPENDENCY_PATHS \"\$\<TARGET_FILE_DIR:json-c::json-c\>\")")
-
     install(CODE [[
         file(GET_RUNTIME_DEPENDENCIES
             LIBRARIES $<TARGET_FILE:h264>
             RESOLVED_DEPENDENCIES_VAR _r_deps
             UNRESOLVED_DEPENDENCIES_VAR _u_deps
-            DIRECTORIES ${DEPENDENCY_PATHS}
             POST_EXCLUDE_REGEXES "^/lib" "^/usr/lib"
         )
         foreach(_file ${_r_deps})
