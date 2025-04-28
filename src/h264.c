@@ -259,6 +259,10 @@ int h264_avcc_to_byte_stream(uint8_t *data, size_t len)
 	while (offset < len) {
 		memcpy(&nalu_len, data, sizeof(uint32_t));
 		nalu_len = ntohl(nalu_len);
+		if (nalu_len == 0) {
+			ULOGE("%s: invalid NALU size (%u)", __func__, nalu_len);
+			return -EPROTO;
+		}
 		memcpy(data, &start_code, sizeof(uint32_t));
 		data += 4 + nalu_len;
 		offset += 4 + nalu_len;

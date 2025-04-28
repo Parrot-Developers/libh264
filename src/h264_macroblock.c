@@ -378,10 +378,10 @@ void h264_get_neighbouring_luma_cb_cr_4x4(struct h264_ctx *ctx,
 	uint32_t xW = 0, yW = 0;
 	h264_inv_luma_cb_cr_4x4(idx, &x, &y);
 	h264_get_neighbouring_locations(
-		ctx, mb, 16, 16, x - 1, y, mbAddrA, &xW, &yW);
+		ctx, mb, 16, 16, (int32_t)x - 1, y, mbAddrA, &xW, &yW);
 	h264_idx_luma_cb_cr_4x4(xW, yW, idxA);
 	h264_get_neighbouring_locations(
-		ctx, mb, 16, 16, x, y - 1, mbAddrB, &xW, &yW);
+		ctx, mb, 16, 16, x, (int32_t)y - 1, mbAddrB, &xW, &yW);
 	h264_idx_luma_cb_cr_4x4(xW, yW, idxB);
 }
 
@@ -414,7 +414,7 @@ void h264_get_neighbouring_chroma_4x4(struct h264_ctx *ctx,
 					mb,
 					ctx->sps_derived.MbWidthC,
 					ctx->sps_derived.MbHeightC,
-					x - 1,
+					(int32_t)x - 1,
 					y,
 					mbAddrA,
 					&xW,
@@ -425,7 +425,7 @@ void h264_get_neighbouring_chroma_4x4(struct h264_ctx *ctx,
 					ctx->sps_derived.MbWidthC,
 					ctx->sps_derived.MbHeightC,
 					x,
-					y - 1,
+					(int32_t)y - 1,
 					mbAddrB,
 					&xW,
 					&yW);

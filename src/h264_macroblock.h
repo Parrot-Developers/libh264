@@ -115,7 +115,7 @@ struct h264_macroblock {
 	enum h264_mb_type mb_type;
 	uint32_t raw_mb_type;
 	uint32_t NumMbPart;
-	uint32_t MbPartPredMode[2];
+	uint32_t MbPartPredMode[4];
 
 	uint32_t raw_sub_mb_type[4];
 	uint32_t sub_mb_type[4];

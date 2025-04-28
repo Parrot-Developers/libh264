@@ -91,7 +91,7 @@ static void unmap_file(struct app *app)
 	app->infile = INVALID_HANDLE_VALUE;
 #else
 	if (app->fd >= 0) {
-		if (app->data != NULL)
+		if (app->data != NULL && app->size > 0)
 			munmap(app->data, app->size);
 		app->data = NULL;
 		close(app->fd);
@@ -144,6 +144,8 @@ static int map_file(struct app *app)
 		goto error;
 	}
 #else
+	off_t size;
+
 	/* Try to open input file */
 	app->fd = open(app->inpath, O_RDONLY);
 	if (app->fd < 0) {
@@ -153,12 +155,14 @@ static int map_file(struct app *app)
 	}
 
 	/* Get size and map it */
-	app->size = lseek(app->fd, 0, SEEK_END);
-	if (app->size == (size_t)-1) {
+	size = lseek(app->fd, 0, SEEK_END);
+	if (size < 0) {
 		res = -errno;
+		app->size = 0;
 		ULOG_ERRNO("lseek", -res);
 		goto error;
 	}
+	app->size = (size_t)size;
 
 	app->data = mmap(NULL, app->size, PROT_READ, MAP_PRIVATE, app->fd, 0);
 	if (app->data == MAP_FAILED) {

@@ -208,12 +208,15 @@ int h264_bs_read_bits_ue(struct h264_bitstream *bs, uint32_t *v)
 }
 
 
-int h264_bs_write_bits(struct h264_bitstream *bs, uint32_t v, uint32_t n)
+int h264_bs_write_bits(struct h264_bitstream *bs, uint64_t v, uint32_t n)
 {
 	int res = 0;
 	uint32_t bits = 0;
 	uint32_t mask = 0;
 	uint32_t part = 0;
+
+	/* Ensure that 'n' is not larger than the number of digits of v */
+	ULOG_ERRNO_RETURN_ERR_IF(n > 64, EINVAL);
 
 	while (n > 0) {
 		/* Write as many bits to current byte */
@@ -221,7 +224,7 @@ int h264_bs_write_bits(struct h264_bitstream *bs, uint32_t v, uint32_t n)
 		if (bits >= n)
 			bits = n;
 		mask = (1 << bits) - 1;
-		part = v >> (n - bits) & mask;
+		part = (v >> (n - bits)) & mask;
 		bs->cache |= part << (8 - bs->cachebits - bits);
 		n -= bits;
 		bs->cachebits += bits;

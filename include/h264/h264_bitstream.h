@@ -65,7 +65,7 @@ int h264_find_nalu(const uint8_t *buf, size_t len, size_t *start, size_t *end);
 
 
 H264_API
-int h264_bs_write_bits(struct h264_bitstream *bs, uint32_t v, uint32_t n);
+int h264_bs_write_bits(struct h264_bitstream *bs, uint64_t v, uint32_t n);
 
 
 H264_API
