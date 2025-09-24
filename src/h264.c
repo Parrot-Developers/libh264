@@ -181,6 +181,22 @@ out:
 }
 
 
+int h264_get_start_code_length(const uint8_t *data, size_t len)
+{
+	ULOG_ERRNO_RETURN_ERR_IF(data == NULL, EINVAL);
+	ULOG_ERRNO_RETURN_ERR_IF(len < 3, EINVAL);
+
+	if ((len >= 4) && (data[0] == 0x00) && (data[1] == 0x00) &&
+	    (data[2] == 0x00) && (data[3] == 0x01))
+		return 4;
+
+	if ((data[0] == 0x00) && (data[1] == 0x00) && (data[2] == 0x01))
+		return 3;
+
+	return -ENOENT;
+}
+
+
 static int find_start_code(const uint8_t *buf, size_t len, size_t *start)
 {
 	const uint8_t *p = buf;

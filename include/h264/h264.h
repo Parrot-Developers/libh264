@@ -70,6 +70,9 @@ H264_API int h264_get_info(const uint8_t *sps,
 			   struct h264_info *info);
 
 
+H264_API int h264_get_start_code_length(const uint8_t *data, size_t len);
+
+
 H264_API int h264_sar_to_aspect_ratio_idc(unsigned int sar_width,
 					  unsigned int sar_height);
 
