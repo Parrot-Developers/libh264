@@ -167,12 +167,12 @@ struct h264_macroblock {
 };
 
 
-void h264_compute_neighbouring_macroblocks(struct h264_ctx *ctx,
+void h264_compute_neighbouring_macroblocks(const struct h264_ctx *ctx,
 					   struct h264_macroblock *mb);
 
 
-void h264_get_neighbouring_luma_cb_cr_4x4(struct h264_ctx *ctx,
-					  struct h264_macroblock *mb,
+void h264_get_neighbouring_luma_cb_cr_4x4(const struct h264_ctx *ctx,
+					  const struct h264_macroblock *mb,
 					  uint32_t idx,
 					  uint32_t *mbAddrA,
 					  uint32_t *idxA,
@@ -180,8 +180,8 @@ void h264_get_neighbouring_luma_cb_cr_4x4(struct h264_ctx *ctx,
 					  uint32_t *idxB);
 
 
-void h264_get_neighbouring_chroma_4x4(struct h264_ctx *ctx,
-				      struct h264_macroblock *mb,
+void h264_get_neighbouring_chroma_4x4(const struct h264_ctx *ctx,
+				      const struct h264_macroblock *mb,
 				      uint32_t idx,
 				      uint32_t *mbAddrA,
 				      uint32_t *idxA,

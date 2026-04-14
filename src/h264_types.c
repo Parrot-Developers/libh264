@@ -192,7 +192,7 @@ char *h264_aspect_ratio_str_alloc(enum h264_aspect_ratio val,
 				  uint32_t sar_width,
 				  uint32_t sar_height)
 {
-	int res;
+	int err;
 	char *str = NULL;
 
 	switch (val) {
@@ -231,8 +231,10 @@ char *h264_aspect_ratio_str_alloc(enum h264_aspect_ratio val,
 	case H264_ASPECT_RATIO_2_1:
 		return strdup("2:1");
 	case H264_ASPECT_RATIO_EXTENDED_SAR:
-		res = asprintf(
+		err = asprintf(
 			&str, "EXTENDED_SAR_%u:%u", sar_width, sar_height);
+		if (err == -1)
+			return NULL;
 		return str;
 	default:
 		return strdup("UNKNOWN");

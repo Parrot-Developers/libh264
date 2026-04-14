@@ -292,7 +292,7 @@ int h264_ctx_set_nalu_header(struct h264_ctx *ctx,
 }
 
 
-int h264_ctx_is_nalu_unknown(struct h264_ctx *ctx)
+int h264_ctx_is_nalu_unknown(const struct h264_ctx *ctx)
 {
 	return ctx == NULL ? 0 : ctx->nalu.unknown;
 }
@@ -386,13 +386,13 @@ int h264_ctx_set_active_pps(struct h264_ctx *ctx, uint32_t pps_id)
 }
 
 
-const struct h264_sps *h264_ctx_get_sps(struct h264_ctx *ctx)
+const struct h264_sps *h264_ctx_get_sps(const struct h264_ctx *ctx)
 {
 	return ctx == NULL ? NULL : ctx->sps;
 }
 
 
-const struct h264_pps *h264_ctx_get_pps(struct h264_ctx *ctx)
+const struct h264_pps *h264_ctx_get_pps(const struct h264_ctx *ctx)
 {
 	return ctx == NULL ? NULL : ctx->pps;
 }
@@ -481,14 +481,14 @@ error:
 }
 
 
-int h264_ctx_get_sei_count(struct h264_ctx *ctx)
+int h264_ctx_get_sei_count(const struct h264_ctx *ctx)
 {
 	ULOG_ERRNO_RETURN_ERR_IF(ctx == NULL, EINVAL);
 	return ctx->sei_count;
 }
 
 
-uint64_t h264_ctx_sei_pic_timing_to_ts(struct h264_ctx *ctx,
+uint64_t h264_ctx_sei_pic_timing_to_ts(const struct h264_ctx *ctx,
 				       const struct h264_sei_pic_timing *sei)
 {
 	uint64_t clock_timestamp;
@@ -521,10 +521,11 @@ uint64_t h264_ctx_sei_pic_timing_to_ts(struct h264_ctx *ctx,
 }
 
 
-uint64_t h264_ctx_sei_pic_timing_to_us(struct h264_ctx *ctx,
+uint64_t h264_ctx_sei_pic_timing_to_us(const struct h264_ctx *ctx,
 				       const struct h264_sei_pic_timing *sei)
 {
-	uint64_t clock_timestamp, clock_timestamp_us;
+	uint64_t clock_timestamp;
+	uint64_t clock_timestamp_us;
 	const struct h264_sps *sps;
 
 	ULOG_ERRNO_RETURN_VAL_IF(ctx == NULL, EINVAL, 0);
@@ -574,11 +575,13 @@ int h264_ctx_set_slice_header(struct h264_ctx *ctx,
 }
 
 
-int h264_get_info_from_ps(struct h264_sps *sps,
-			  struct h264_pps *pps,
-			  struct h264_sps_derived *sps_derived,
+int h264_get_info_from_ps(const struct h264_sps *sps,
+			  const struct h264_pps *pps,
+			  const struct h264_sps_derived *sps_derived,
 			  struct h264_info *info)
 {
+	UNUSED(pps);
+
 	memset(info, 0, sizeof(*info));
 
 	info->width = sps_derived->PicWidthInSamplesLuma;
@@ -671,7 +674,7 @@ int h264_get_info_from_ps(struct h264_sps *sps,
 }
 
 
-int h264_ctx_get_info(struct h264_ctx *ctx, struct h264_info *info)
+int h264_ctx_get_info(const struct h264_ctx *ctx, struct h264_info *info)
 {
 	ULOG_ERRNO_RETURN_ERR_IF(ctx == NULL, EINVAL);
 	ULOG_ERRNO_RETURN_ERR_IF(info == NULL, EINVAL);
@@ -687,7 +690,8 @@ int h264_ctx_get_info(struct h264_ctx *ctx, struct h264_info *info)
 int h264_sar_to_aspect_ratio_idc(unsigned int sar_width,
 				 unsigned int sar_height)
 {
-	unsigned int idx, found = 0;
+	unsigned int idx;
+	unsigned int found = 0;
 
 	/* Start at index 1 as 0 is 'unspecified' */
 	for (idx = 1; idx < ARRAY_SIZE(h264_sar); idx++) {

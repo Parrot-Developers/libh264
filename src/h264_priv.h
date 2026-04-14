@@ -61,6 +61,10 @@
 #define Clip3(x, y, z) ((z) < (x) ? (x) : (z) > (y) ? (y) : (z))
 
 
+#define UNUSED(x) (void)(x)
+#define MAYBE_UNUSED(x) (void)(x)
+
+
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 
@@ -155,9 +159,9 @@ int h264_ctx_add_sei_internal(struct h264_ctx *ctx, struct h264_sei **ret_obj);
 int h264_ctx_clear_slice(struct h264_ctx *ctx);
 
 
-int h264_get_info_from_ps(struct h264_sps *sps,
-			  struct h264_pps *pps,
-			  struct h264_sps_derived *sps_derived,
+int h264_get_info_from_ps(const struct h264_sps *sps,
+			  const struct h264_pps *pps,
+			  const struct h264_sps_derived *sps_derived,
 			  struct h264_info *info);
 
 
@@ -175,7 +179,7 @@ int h264_gen_slice_group_map(struct h264_ctx *ctx);
 void h264_clear_slice_group_map(struct h264_ctx *ctx);
 
 
-uint32_t h264_next_mb_addr(struct h264_ctx *ctx, uint32_t mbAddr);
+uint32_t h264_next_mb_addr(const struct h264_ctx *ctx, uint32_t mbAddr);
 
 
 /**
@@ -193,7 +197,7 @@ static inline uint32_t h264_intlog2(uint32_t x)
 }
 
 
-static inline uint32_t h264_get_mb_addr_off(struct h264_ctx *ctx,
+static inline uint32_t h264_get_mb_addr_off(const struct h264_ctx *ctx,
 					    uint32_t mbAddr)
 {
 	return mbAddr - ctx->slice.hdr.first_mb_in_slice *

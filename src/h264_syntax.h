@@ -155,6 +155,9 @@ static int
 				      H264_SYNTAX_CONST int *use_default,
 				      H264_SYNTAX_CONST int *optimized)
 {
+	MAYBE_UNUSED(use_default);
+	MAYBE_UNUSED(optimized);
+
 #if H264_SYNTAX_OP_KIND == H264_SYNTAX_OP_KIND_READ
 	int32_t last = 8;
 	int32_t next = 8;
@@ -264,7 +267,8 @@ static int H264_SYNTAX_FCT(sps)(struct h264_bitstream *bs,
 				H264_SYNTAX_CONST struct h264_sps *sps)
 {
 	int res = 0;
-	uint32_t i = 0, n = 0;
+	uint32_t i = 0;
+	uint32_t n = 0;
 
 	H264_BITS(sps->profile_idc, 8);
 	H264_BITS(sps->constraint_set0_flag, 1);
@@ -366,7 +370,8 @@ static int H264_SYNTAX_FCT(pps_internal)(struct h264_bitstream *bs,
 					 H264_SYNTAX_CONST struct h264_pps *pps)
 {
 	int res = 0;
-	uint32_t i = 0, n = 0;
+	uint32_t i = 0;
+	uint32_t n = 0;
 #if H264_SYNTAX_OP_KIND != H264_SYNTAX_OP_KIND_DUMP
 	uint32_t len = 0;
 #endif
@@ -482,7 +487,7 @@ static int H264_SYNTAX_FCT(pps_with_ctx)(struct h264_bitstream *bs,
 					 H264_SYNTAX_CONST struct h264_pps *pps)
 {
 	int res = 0;
-	struct h264_sps *sps = NULL;
+	const struct h264_sps *sps = NULL;
 
 	/* Read PPS/SPS id, load SPS in context */
 	H264_BITS_UE(pps->pic_parameter_set_id);
@@ -588,7 +593,7 @@ static int H264_SYNTAX_FCT(sei_buffering_period)(
  */
 static int H264_SYNTAX_FCT(sei_pic_timing)(
 	struct h264_bitstream *bs,
-	struct h264_ctx *ctx,
+	const struct h264_ctx *ctx,
 	H264_SYNTAX_CONST struct h264_sei_pic_timing *sei)
 {
 	static const uint32_t num_clock_ts[16] = {
@@ -654,11 +659,13 @@ static int H264_SYNTAX_FCT(sei_pic_timing)(
 			/* clang-format off */
 time_offset:
 			/* clang-format on */
-			n = sps->vui.nal_hrd_parameters_present_flag
-				    ? sps->vui.nal_hrd.time_offset_length
-			    : sps->vui.vcl_hrd_parameters_present_flag
-				    ? sps->vui.vcl_hrd.time_offset_length
-				    : 24;
+			if (sps->vui.nal_hrd_parameters_present_flag)
+				n = sps->vui.nal_hrd.time_offset_length;
+			else if (sps->vui.vcl_hrd_parameters_present_flag)
+				n = sps->vui.vcl_hrd.time_offset_length;
+			else
+				n = 24;
+
 			if (n > 0)
 				H264_BITS_I(sei->clk_ts[i].time_offset, n);
 			/* clang-format off */
@@ -678,9 +685,11 @@ next_ts:
  */
 static int H264_SYNTAX_FCT(sei_pan_scan_rect)(
 	struct h264_bitstream *bs,
-	struct h264_ctx *ctx,
+	const struct h264_ctx *ctx,
 	H264_SYNTAX_CONST struct h264_sei_pan_scan_rect *sei)
 {
+	UNUSED(ctx);
+
 	H264_BITS_UE(sei->pan_scan_rect_id);
 	H264_BITS(sei->pan_scan_rect_cancel_flag, 1);
 	if (!sei->pan_scan_rect_cancel_flag) {
@@ -734,6 +743,8 @@ static int H264_SYNTAX_FCT(sei_filler_payload)(
 	struct h264_ctx *ctx,
 	H264_SYNTAX_CONST struct h264_sei_filler_payload *sei)
 {
+	UNUSED(ctx);
+
 	int res = 0;
 
 	res = H264_SYNTAX_FCT(sei_data)(bs, &sei->buf, &sei->len);
@@ -748,9 +759,11 @@ static int H264_SYNTAX_FCT(sei_filler_payload)(
  */
 static int H264_SYNTAX_FCT(sei_user_data_registered)(
 	struct h264_bitstream *bs,
-	struct h264_ctx *ctx,
+	const struct h264_ctx *ctx,
 	H264_SYNTAX_CONST struct h264_sei_user_data_registered *sei)
 {
+	UNUSED(ctx);
+
 	int res = 0;
 
 	H264_BITS(sei->country_code, 8);
@@ -769,9 +782,11 @@ static int H264_SYNTAX_FCT(sei_user_data_registered)(
  */
 static int H264_SYNTAX_FCT(sei_user_data_unregistered)(
 	struct h264_bitstream *bs,
-	struct h264_ctx *ctx,
+	const struct h264_ctx *ctx,
 	H264_SYNTAX_CONST struct h264_sei_user_data_unregistered *sei)
 {
+	UNUSED(ctx);
+
 	int res = 0;
 
 	H264_BEGIN_ARRAY(uuid);
@@ -791,9 +806,11 @@ static int H264_SYNTAX_FCT(sei_user_data_unregistered)(
  */
 static int H264_SYNTAX_FCT(sei_recovery_point)(
 	struct h264_bitstream *bs,
-	struct h264_ctx *ctx,
+	const struct h264_ctx *ctx,
 	H264_SYNTAX_CONST struct h264_sei_recovery_point *sei)
 {
+	UNUSED(ctx);
+
 	H264_BITS_UE(sei->recovery_frame_cnt);
 	H264_BITS(sei->exact_match_flag, 1);
 	H264_BITS(sei->broken_link_flag, 1);
@@ -808,6 +825,9 @@ static int H264_SYNTAX_FCT(one_sei)(struct h264_bitstream *bs,
 				    void *userdata,
 				    H264_SYNTAX_CONST struct h264_sei *sei)
 {
+	UNUSED(ctx);
+	UNUSED(userdata);
+
 #if H264_SYNTAX_OP_KIND == H264_SYNTAX_OP_KIND_READ
 	int bit = 0;
 #endif
@@ -977,6 +997,8 @@ static int H264_SYNTAX_FCT(sei)(struct h264_bitstream *bs,
 static int H264_SYNTAX_FCT(aud)(struct h264_bitstream *bs,
 				H264_SYNTAX_CONST struct h264_aud *aud)
 {
+	UNUSED(bs);
+
 	H264_BITS(aud->primary_pic_type, 3);
 	H264_BITS_RBSP_TRAILING();
 	return 0;
@@ -988,6 +1010,8 @@ static int H264_SYNTAX_FCT(aud)(struct h264_bitstream *bs,
  */
 static int H264_SYNTAX_FCT(filler)(struct h264_bitstream *bs, size_t *len)
 {
+	MAYBE_UNUSED(len);
+
 #if H264_SYNTAX_OP_KIND == H264_SYNTAX_OP_KIND_WRITE
 	uint32_t ff_byte = 0xFF;
 	for (size_t i = 0; i < *len; i++)
@@ -1016,7 +1040,8 @@ static int H264_SYNTAX_FCT(rplm_items)(
 	H264_SYNTAX_CONST struct h264_rplm_item *items,
 	uint32_t maxcount)
 {
-	uint32_t i = 0, val = 0;
+	uint32_t i = 0;
+	uint32_t val = 0;
 
 	do {
 		ULOG_ERRNO_RETURN_ERR_IF(i >= maxcount, EIO);
@@ -1177,7 +1202,8 @@ static int H264_SYNTAX_FCT(drpm_items)(
 	H264_SYNTAX_CONST struct h264_drpm_item *items,
 	uint32_t maxcount)
 {
-	uint32_t i = 0, val = 0;
+	uint32_t i = 0;
+	uint32_t val = 0;
 
 	do {
 		ULOG_ERRNO_RETURN_ERR_IF(i >= maxcount, EIO);
@@ -1407,7 +1433,7 @@ static int H264_SYNTAX_FCT(slice_layer)(struct h264_bitstream *bs,
 	struct h264_slice_header *sh = &_sh;
 	memset(sh, 0, sizeof(*sh));
 #else
-	struct h264_slice_header *sh = &ctx->slice.hdr;
+	const struct h264_slice_header *sh = &ctx->slice.hdr;
 #endif
 
 	H264_BEGIN_STRUCT(slice_header);
@@ -1506,7 +1532,7 @@ static int H264_SYNTAX_FCT(nalu)(struct h264_bitstream *bs,
 		/* 7.4.2.1.1 Sequence parameter set data semantics */
 		sps->chroma_format_idc = 1;
 #else
-		struct h264_sps *sps = ctx->sps;
+		const struct h264_sps *sps = ctx->sps;
 		ULOG_ERRNO_RETURN_ERR_IF(sps == NULL, EIO);
 #endif
 		ULOG_ERRNO_RETURN_ERR_IF(ctx->nalu.hdr.nal_ref_idc == 0, EIO);
@@ -1528,7 +1554,7 @@ static int H264_SYNTAX_FCT(nalu)(struct h264_bitstream *bs,
 		struct h264_pps *pps = &_pps;
 		memset(pps, 0, sizeof(*pps));
 #else
-		struct h264_pps *pps = ctx->pps;
+		const struct h264_pps *pps = ctx->pps;
 		ULOG_ERRNO_RETURN_ERR_IF(pps == NULL, EIO);
 #endif
 		ULOG_ERRNO_RETURN_ERR_IF(ctx->nalu.hdr.nal_ref_idc == 0, EIO);

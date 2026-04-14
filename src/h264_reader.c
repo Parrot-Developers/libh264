@@ -121,7 +121,8 @@ int h264_reader_parse(struct h264_reader *reader,
 		      size_t *off)
 {
 	int res = 0;
-	size_t start = 0, end = 0;
+	size_t start = 0;
+	size_t end = 0;
 
 	ULOG_ERRNO_RETURN_ERR_IF(reader == NULL, EINVAL);
 	ULOG_ERRNO_RETURN_ERR_IF(buf == NULL, EINVAL);

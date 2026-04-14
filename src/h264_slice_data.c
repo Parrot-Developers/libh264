@@ -833,6 +833,31 @@ static const uint8_t s_h264_run_before[8][12][8] = {
 /* clang-format on */
 
 
+static int h264_handle_i_type(struct h264_macroblock *mb, uint32_t type)
+{
+	if (type == 0) {
+		mb->mb_type = H264_MB_TYPE_I_NxN;
+		mb->NumMbPart = 1;
+		/* Will be changed to PredMode_Intra_8x8 if
+		 * transform_size_8x8_flag is set */
+		mb->MbPartPredMode[0] = PredMode_Intra_4x4;
+	} else if (type >= 1 && type <= 24) {
+		mb->mb_type = H264_MB_TYPE_I_16x16;
+		mb->NumMbPart = 1;
+		mb->MbPartPredMode[0] = PredMode_Intra_16x16;
+		mb->Intra16x16PredMode = (type - 1) % 4;
+		mb->CodedBlockPatternLuma = (type <= 12 ? 0 : 15);
+		mb->CodedBlockPatternChroma = ((type - 1) / 4) % 3;
+	} else if (type == 25) {
+		mb->mb_type = H264_MB_TYPE_I_PCM;
+		mb->NumMbPart = 0;
+	} else {
+		return -EIO;
+	}
+	return 0;
+}
+
+
 /**
  * 7.4.5 Macroblock layer semantics
  */
@@ -873,28 +898,9 @@ int h264_read_mb_type(struct h264_bitstream *bs,
 	case H264_SLICE_TYPE_UNKNOWN:
 		break;
 	case H264_SLICE_TYPE_I:
-		/* clang-format off */
-type_i:
-		/* clang-format on */
-		if (type == 0) {
-			mb->mb_type = H264_MB_TYPE_I_NxN;
-			mb->NumMbPart = 1;
-			/* Will be changed to PredMode_Intra_8x8 if
-			 * transform_size_8x8_flag is set */
-			mb->MbPartPredMode[0] = PredMode_Intra_4x4;
-		} else if (type >= 1 && type <= 24) {
-			mb->mb_type = H264_MB_TYPE_I_16x16;
-			mb->NumMbPart = 1;
-			mb->MbPartPredMode[0] = PredMode_Intra_16x16;
-			mb->Intra16x16PredMode = (type - 1) % 4;
-			mb->CodedBlockPatternLuma = (type <= 12 ? 0 : 15);
-			mb->CodedBlockPatternChroma = ((type - 1) / 4) % 3;
-		} else if (type == 25) {
-			mb->mb_type = H264_MB_TYPE_I_PCM;
-			mb->NumMbPart = 0;
-		} else {
-			return -EIO;
-		}
+		res = h264_handle_i_type(mb, type);
+		if (res < 0)
+			return res;
 		break;
 
 	case H264_SLICE_TYPE_SI:
@@ -904,7 +910,9 @@ type_i:
 			mb->MbPartPredMode[0] = PredMode_Intra_4x4;
 		} else {
 			type -= 1;
-			goto type_i;
+			res = h264_handle_i_type(mb, type);
+			if (res < 0)
+				return res;
 		}
 		break;
 
@@ -928,7 +936,9 @@ type_i:
 			mb->NumMbPart = 4;
 		} else {
 			type -= 5;
-			goto type_i;
+			res = h264_handle_i_type(mb, type);
+			if (res < 0)
+				return res;
 		}
 		break;
 
@@ -959,7 +969,9 @@ type_i:
 			mb->NumMbPart = 4;
 		} else {
 			type -= 23;
-			goto type_i;
+			res = h264_handle_i_type(mb, type);
+			if (res < 0)
+				return res;
 		}
 		break;
 	}
@@ -973,7 +985,7 @@ type_i:
  * 7.4.5.2 Sub-macroblock prediction semantics
  */
 int h264_read_sub_mb_type(struct h264_bitstream *bs,
-			  struct h264_ctx *ctx,
+			  const struct h264_ctx *ctx,
 			  struct h264_macroblock *mb)
 {
 	int res = 0;
@@ -1039,7 +1051,7 @@ int h264_read_sub_mb_type(struct h264_bitstream *bs,
  * 9.1.2 Mapping process for coded block pattern
  */
 int h264_read_coded_block_pattern(struct h264_bitstream *bs,
-				  struct h264_ctx *ctx,
+				  const struct h264_ctx *ctx,
 				  struct h264_macroblock *mb)
 {
 	int res = 0;
@@ -1135,10 +1147,13 @@ int h264_new_macroblock(struct h264_ctx *ctx,
 	mb = ctx->mb = &ctx->_mb;
 	memset(ctx->mb, 0, sizeof(*ctx->mb));
 	ctx->mb->mbAddr = mbAddr;
-	ctx->mb->mb_type = !skipped ? H264_MB_TYPE_UNKNOWN
-			   : ctx->slice.type == H264_SLICE_TYPE_B
-				   ? H264_MB_TYPE_B_SKIP
-				   : H264_MB_TYPE_P_SKIP;
+	if (!skipped) {
+		ctx->mb->mb_type = H264_MB_TYPE_UNKNOWN;
+	} else {
+		ctx->mb->mb_type = (ctx->slice.type == H264_SLICE_TYPE_B)
+					   ? H264_MB_TYPE_B_SKIP
+					   : H264_MB_TYPE_P_SKIP;
+	}
 	h264_compute_neighbouring_macroblocks(ctx, ctx->mb);
 
 	/* Handle field flag */
@@ -1220,7 +1235,7 @@ int h264_set_nz_coeff(struct h264_ctx *ctx,
 }
 
 
-static int h264_get_nz_coeff(struct h264_ctx *ctx,
+static int h264_get_nz_coeff(const struct h264_ctx *ctx,
 			     uint32_t mbAddr,
 			     uint32_t comp,
 			     uint32_t idx,
@@ -1238,7 +1253,7 @@ static int h264_get_nz_coeff(struct h264_ctx *ctx,
  */
 int h264_read_coeff_token(struct h264_bitstream *bs,
 			  struct h264_ctx *ctx,
-			  struct h264_macroblock *mb,
+			  const struct h264_macroblock *mb,
 			  uint32_t mode,
 			  uint32_t comp,
 			  uint32_t blkIdx,
@@ -1250,7 +1265,8 @@ int h264_read_coeff_token(struct h264_bitstream *bs,
 	uint32_t coeff_token = 0;
 	uint32_t mbAddrA = H264_MB_ADDR_INVALID;
 	uint32_t mbAddrB = H264_MB_ADDR_INVALID;
-	uint32_t blkIdxA = 0, blkIdxB = 0;
+	uint32_t blkIdxA = 0;
+	uint32_t blkIdxB = 0;
 	uint32_t nA = 0;
 	uint32_t nB = 0;
 	uint32_t nC = 0;
@@ -1316,6 +1332,9 @@ int h264_read_coeff_token(struct h264_bitstream *bs,
 						 &blkIdxA,
 						 &mbAddrB,
 						 &blkIdxB);
+		break;
+
+	default:
 		break;
 	}
 

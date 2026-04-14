@@ -50,18 +50,18 @@ int h264_read_mb_type(struct h264_bitstream *bs,
 
 
 int h264_read_sub_mb_type(struct h264_bitstream *bs,
-			  struct h264_ctx *ctx,
+			  const struct h264_ctx *ctx,
 			  struct h264_macroblock *mb);
 
 
 int h264_read_coded_block_pattern(struct h264_bitstream *bs,
-				  struct h264_ctx *ctx,
+				  const struct h264_ctx *ctx,
 				  struct h264_macroblock *mb);
 
 
 int h264_read_coeff_token(struct h264_bitstream *bs,
 			  struct h264_ctx *ctx,
-			  struct h264_macroblock *mb,
+			  const struct h264_macroblock *mb,
 			  uint32_t mode,
 			  uint32_t comp,
 			  uint32_t blkIdx,
@@ -80,7 +80,7 @@ int h264_read_run_before(struct h264_bitstream *bs,
 			 uint32_t *run_before);
 
 
-uint32_t h264_next_mb_addr(struct h264_ctx *ctx, uint32_t mbAddr);
+uint32_t h264_next_mb_addr(const struct h264_ctx *ctx, uint32_t mbAddr);
 
 
 #endif /* !_H264_SLICE_DATA_H_ */

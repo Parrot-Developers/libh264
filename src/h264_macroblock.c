@@ -82,8 +82,8 @@ static void h264_inv_chroma_4x4(uint32_t idx, uint32_t *x, uint32_t *y)
  *          frames
  */
 static void
-h264_get_neighbouring_locations_non_mbaff(struct h264_ctx *ctx,
-					  struct h264_macroblock *mb,
+h264_get_neighbouring_locations_non_mbaff(const struct h264_ctx *ctx,
+					  const struct h264_macroblock *mb,
 					  uint32_t maxW,
 					  uint32_t maxH,
 					  int32_t xN,
@@ -92,6 +92,8 @@ h264_get_neighbouring_locations_non_mbaff(struct h264_ctx *ctx,
 					  uint32_t *xW,
 					  uint32_t *yW)
 {
+	UNUSED(ctx);
+
 	if (xN < 0)
 		*mbAddrN = mb->mbAddrA;
 	else if (yN < 0)
@@ -99,24 +101,27 @@ h264_get_neighbouring_locations_non_mbaff(struct h264_ctx *ctx,
 	else
 		*mbAddrN = mb->mbAddr;
 
-	*xW = xN < 0 ? (uint32_t)(xN + maxW) : (uint32_t)xN;
-	*yW = yN < 0 ? (uint32_t)(yN + maxH) : (uint32_t)yN;
+	*xW = xN < 0 ? (xN + maxW) : (uint32_t)xN;
+	*yW = yN < 0 ? (yN + maxH) : (uint32_t)yN;
 }
 
 
 /**
  * 6.4.12.2 Specification for neighbouring locations in MBAFF frames
  */
-static void h264_get_neighbouring_locations_mbaff(struct h264_ctx *ctx,
-						  struct h264_macroblock *mb,
-						  uint32_t maxW,
-						  uint32_t maxH,
-						  int32_t xN,
-						  int32_t yN,
-						  uint32_t *mbAddrN,
-						  uint32_t *xW,
-						  uint32_t *yW)
+static void
+h264_get_neighbouring_locations_mbaff(const struct h264_ctx *ctx,
+				      const struct h264_macroblock *mb,
+				      uint32_t maxW,
+				      uint32_t maxH,
+				      int32_t xN,
+				      int32_t yN,
+				      uint32_t *mbAddrN,
+				      uint32_t *xW,
+				      uint32_t *yW)
 {
+	UNUSED(ctx);
+
 	int currMbFrameFlag = !mb->mb_field_decoding_flag;
 	int mbIsTopMbFlag = mb->mbAddr % 2 == 0;
 	int32_t yM = 0;
@@ -226,8 +231,8 @@ static void h264_get_neighbouring_locations_mbaff(struct h264_ctx *ctx,
 		yM = yN;
 	}
 
-	*xW = xN < 0 ? (uint32_t)(xN + maxW) : (uint32_t)xN;
-	*yW = yM < 0 ? (uint32_t)(yM + maxH) : (uint32_t)yM;
+	*xW = xN < 0 ? (xN + maxW) : (uint32_t)xN;
+	*yW = yM < 0 ? (yM + maxH) : (uint32_t)yM;
 }
 
 
@@ -243,8 +248,8 @@ static void h264_get_neighbouring_locations_mbaff(struct h264_ctx *ctx,
  *           of the macroblock mbAddrN (rather than relative to the upper-left
  *           corner of the current macroblock).
  */
-static void h264_get_neighbouring_locations(struct h264_ctx *ctx,
-					    struct h264_macroblock *mb,
+static void h264_get_neighbouring_locations(const struct h264_ctx *ctx,
+					    const struct h264_macroblock *mb,
 					    uint32_t maxW,
 					    uint32_t maxH,
 					    int32_t xN,
@@ -303,7 +308,7 @@ static void h264_idx_chroma_4x4(uint32_t xP, uint32_t yP, uint32_t *idx)
  * 6.4.10 Derivation process for neighbouring macroblock addresses and their
  *        availability in MBAFF frames
  */
-void h264_compute_neighbouring_macroblocks(struct h264_ctx *ctx,
+void h264_compute_neighbouring_macroblocks(const struct h264_ctx *ctx,
 					   struct h264_macroblock *mb)
 {
 	uint32_t PicWidthInMbs = ctx->sps_derived.PicWidthInMbs;
@@ -366,16 +371,18 @@ void h264_compute_neighbouring_macroblocks(struct h264_ctx *ctx,
  * idxB: the index of the 4x4 luma/cb/cr block above the 4x4 block with index
  *       idx and its availability status.
  */
-void h264_get_neighbouring_luma_cb_cr_4x4(struct h264_ctx *ctx,
-					  struct h264_macroblock *mb,
+void h264_get_neighbouring_luma_cb_cr_4x4(const struct h264_ctx *ctx,
+					  const struct h264_macroblock *mb,
 					  uint32_t idx,
 					  uint32_t *mbAddrA,
 					  uint32_t *idxA,
 					  uint32_t *mbAddrB,
 					  uint32_t *idxB)
 {
-	uint32_t x = 0, y = 0;
-	uint32_t xW = 0, yW = 0;
+	uint32_t x = 0;
+	uint32_t y = 0;
+	uint32_t xW = 0;
+	uint32_t yW = 0;
 	h264_inv_luma_cb_cr_4x4(idx, &x, &y);
 	h264_get_neighbouring_locations(
 		ctx, mb, 16, 16, (int32_t)x - 1, y, mbAddrA, &xW, &yW);
@@ -399,16 +406,18 @@ void h264_get_neighbouring_luma_cb_cr_4x4(struct h264_ctx *ctx,
  * idxB: the index of the 4x4 chroma block above the 4x4 chroma block with index
  *       idx and its availability status.
  */
-void h264_get_neighbouring_chroma_4x4(struct h264_ctx *ctx,
-				      struct h264_macroblock *mb,
+void h264_get_neighbouring_chroma_4x4(const struct h264_ctx *ctx,
+				      const struct h264_macroblock *mb,
 				      uint32_t idx,
 				      uint32_t *mbAddrA,
 				      uint32_t *idxA,
 				      uint32_t *mbAddrB,
 				      uint32_t *idxB)
 {
-	uint32_t x = 0, y = 0;
-	uint32_t xW = 0, yW = 0;
+	uint32_t x = 0;
+	uint32_t y = 0;
+	uint32_t xW = 0;
+	uint32_t yW = 0;
 	h264_inv_chroma_4x4(idx, &x, &y);
 	h264_get_neighbouring_locations(ctx,
 					mb,

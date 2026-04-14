@@ -102,7 +102,7 @@ static const char *get_mode_str(uint32_t mode, uint32_t comp)
 
 static int H264_SYNTAX_FCT(residual_block)(struct h264_bitstream *bs,
 					   struct h264_ctx *ctx,
-					   struct h264_macroblock *mb,
+					   const struct h264_macroblock *mb,
 					   int16_t coeffLevel[],
 					   uint32_t startIdx,
 					   uint32_t endIdx,
@@ -420,11 +420,11 @@ static int H264_SYNTAX_FCT(residual)(struct h264_bitstream *bs,
 
 
 static int H264_SYNTAX_FCT(sub_mb_pred)(struct h264_bitstream *bs,
-					struct h264_ctx *ctx,
+					const struct h264_ctx *ctx,
 					struct h264_macroblock *mb)
 {
 	int res = 0;
-	struct h264_slice_header *sh = &ctx->slice.hdr;
+	const struct h264_slice_header *sh = &ctx->slice.hdr;
 
 	res = h264_read_sub_mb_type(bs, ctx, mb);
 	ULOG_ERRNO_RETURN_ERR_IF(res < 0, -res);
@@ -504,10 +504,10 @@ static int H264_SYNTAX_FCT(sub_mb_pred)(struct h264_bitstream *bs,
 
 
 static int H264_SYNTAX_FCT(mb_pred)(struct h264_bitstream *bs,
-				    struct h264_ctx *ctx,
+				    const struct h264_ctx *ctx,
 				    struct h264_macroblock *mb)
 {
-	struct h264_slice_header *sh = &ctx->slice.hdr;
+	const struct h264_slice_header *sh = &ctx->slice.hdr;
 	uint32_t pred_mode_flag = 0;
 
 	if (mb->MbPartPredMode[0] == PredMode_Intra_4x4 ||
@@ -708,7 +708,7 @@ static int H264_SYNTAX_FCT(slice_data_internal)(struct h264_bitstream *bs,
 	uint32_t CurrMbAddr = 0;
 	int prev_mb_skipped = 0;
 	uint32_t mb_count = 0;
-	struct h264_slice_header *sh = &ctx->slice.hdr;
+	const struct h264_slice_header *sh = &ctx->slice.hdr;
 	uint32_t mb_skip_run = 0;
 	int mb_field_decoding_flag = 0;
 
@@ -795,6 +795,9 @@ static int H264_SYNTAX_FCT(slice_data)(struct h264_bitstream *bs,
 				       const struct h264_ctx_cbs *cbs,
 				       void *userdata)
 {
+	MAYBE_UNUSED(cbs);
+	MAYBE_UNUSED(userdata);
+
 	int res = 0;
 
 #if H264_SYNTAX_OP_KIND == H264_SYNTAX_OP_KIND_READ

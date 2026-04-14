@@ -4438,7 +4438,8 @@ static const struct pair s_h264_cabac_ctx_table_P_2[1024] = {
 /* clang-format on */
 
 
-void h264_cabac_init_states(struct h264_cabac *cabac, struct h264_ctx *ctx)
+void h264_cabac_init_states(struct h264_cabac *cabac,
+			    const struct h264_ctx *ctx)
 {
 	const struct pair *table = NULL;
 

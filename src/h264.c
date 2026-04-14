@@ -68,6 +68,8 @@ int h264_get_sps_derived(const struct h264_sps *sps,
 		sps_derived->MbWidthC = 16;
 		sps_derived->MbHeightC = 16;
 		break;
+	default:
+		break;
 	}
 
 	sps_derived->BitDepthLuma = sps->bit_depth_luma_minus8 + 8;
@@ -227,7 +229,9 @@ int h264_byte_stream_to_avcc(uint8_t *data, size_t len)
 {
 	int res;
 	uint32_t nalu_len_be;
-	size_t start, next_start, nalu_len;
+	size_t start;
+	size_t next_start;
+	size_t nalu_len;
 
 	ULOG_ERRNO_RETURN_ERR_IF(data == NULL, EINVAL);
 	ULOG_ERRNO_RETURN_ERR_IF(len == 0, EINVAL);
@@ -266,7 +270,8 @@ int h264_byte_stream_to_avcc(uint8_t *data, size_t len)
 
 int h264_avcc_to_byte_stream(uint8_t *data, size_t len)
 {
-	uint32_t nalu_len, start_code = htonl(0x00000001);
+	uint32_t nalu_len;
+	uint32_t start_code = htonl(0x00000001);
 	size_t offset = 0;
 
 	ULOG_ERRNO_RETURN_ERR_IF(data == NULL, EINVAL);

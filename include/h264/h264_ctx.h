@@ -174,7 +174,7 @@ int h264_ctx_set_nalu_header(struct h264_ctx *ctx,
 
 
 H264_API
-int h264_ctx_is_nalu_unknown(struct h264_ctx *ctx);
+int h264_ctx_is_nalu_unknown(const struct h264_ctx *ctx);
 
 
 H264_API
@@ -194,11 +194,11 @@ int h264_ctx_set_filler(struct h264_ctx *ctx, size_t len);
 
 
 H264_API
-const struct h264_sps *h264_ctx_get_sps(struct h264_ctx *ctx);
+const struct h264_sps *h264_ctx_get_sps(const struct h264_ctx *ctx);
 
 
 H264_API
-const struct h264_pps *h264_ctx_get_pps(struct h264_ctx *ctx);
+const struct h264_pps *h264_ctx_get_pps(const struct h264_ctx *ctx);
 
 
 H264_API
@@ -206,16 +206,16 @@ int h264_ctx_add_sei(struct h264_ctx *ctx, const struct h264_sei *sei);
 
 
 H264_API
-int h264_ctx_get_sei_count(struct h264_ctx *ctx);
+int h264_ctx_get_sei_count(const struct h264_ctx *ctx);
 
 
 H264_API uint64_t
-h264_ctx_sei_pic_timing_to_ts(struct h264_ctx *ctx,
+h264_ctx_sei_pic_timing_to_ts(const struct h264_ctx *ctx,
 			      const struct h264_sei_pic_timing *sei);
 
 
 H264_API uint64_t
-h264_ctx_sei_pic_timing_to_us(struct h264_ctx *ctx,
+h264_ctx_sei_pic_timing_to_us(const struct h264_ctx *ctx,
 			      const struct h264_sei_pic_timing *sei);
 
 
@@ -224,7 +224,8 @@ int h264_ctx_set_slice_header(struct h264_ctx *ctx,
 			      const struct h264_slice_header *sh);
 
 
-H264_API int h264_ctx_get_info(struct h264_ctx *ctx, struct h264_info *info);
+H264_API int h264_ctx_get_info(const struct h264_ctx *ctx,
+			       struct h264_info *info);
 
 
 #endif /* !_H264_CTX_H_ */

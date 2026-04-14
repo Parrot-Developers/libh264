@@ -125,6 +125,8 @@ static uint32_t get_ctx_idx_mb_type(const struct h264_macroblock *mb,
 static uint32_t get_ctx_idx_mb_qp_delta(const struct h264_macroblock *mb,
 					uint32_t ctxIdxOffset)
 {
+	UNUSED(mb);
+
 	/* TODO */
 	return ctxIdxOffset;
 }
@@ -176,6 +178,8 @@ get_ctx_idx_coded_block_flag_cond_term(const struct h264_ctx *ctx,
 				       const struct h264_macroblock_info *info,
 				       uint32_t ctxBlockCat)
 {
+	UNUSED(ctxBlockCat);
+
 	/* TODO */
 	int transBlockAvailable = 0;
 	int transBlockCodedBlockFlag = 0;
@@ -263,7 +267,6 @@ static uint32_t get_ctx_idx(const struct h264_macroblock *mb,
 		default:
 			return 7;
 		}
-		break;
 
 	/* mb_skip_flag (P, SP slices only) */
 	case 11:
@@ -307,7 +310,6 @@ static uint32_t get_ctx_idx(const struct h264_macroblock *mb,
 		default:
 			return bins->ctxIdxOffset + 3;
 		}
-		break;
 
 	/* sub_mb_type[ ] (P, SP slices only) */
 	case 21:
@@ -346,7 +348,6 @@ static uint32_t get_ctx_idx(const struct h264_macroblock *mb,
 		default:
 			return bins->ctxIdxOffset + 5;
 		}
-		break;
 
 	/* mb_type (B slices only): suffix */
 	case 32:
@@ -365,7 +366,6 @@ static uint32_t get_ctx_idx(const struct h264_macroblock *mb,
 		default:
 			return bins->ctxIdxOffset + 3;
 		}
-		break;
 
 	/* sub_mb_type[ ] (B slices only) */
 	case 36:
@@ -410,7 +410,6 @@ static uint32_t get_ctx_idx(const struct h264_macroblock *mb,
 		default:
 			return bins->ctxIdxOffset + 3;
 		}
-		break;
 
 	/* intra_chroma_pred_mode */
 	case 64:
@@ -459,6 +458,8 @@ static uint32_t get_ctx_idx(const struct h264_macroblock *mb,
 
 	/* transform_size_8x8_flag */
 	case 399:
+		break;
+	default:
 		break;
 	}
 
@@ -594,7 +595,7 @@ static void binarize_tu(uint32_t cMax, uint32_t val, struct binstring *bins)
  * 9.3.1.1 Initialisation process for context variables
  */
 int h264_cabac_init_enc(struct h264_cabac *cabac,
-			struct h264_ctx *ctx,
+			const struct h264_ctx *ctx,
 			struct h264_bitstream *bs)
 {
 	int res = 0;
@@ -611,7 +612,7 @@ out:
 
 
 int h264_cabac_init_dec(struct h264_cabac *cabac,
-			struct h264_ctx *ctx,
+			const struct h264_ctx *ctx,
 			struct h264_bitstream *bs)
 {
 	int res = 0;
@@ -628,8 +629,8 @@ out:
  * maxBinIdxCtx, and ctxIdxOffset
  */
 int h264_cabac_write_mb_type(struct h264_cabac *cabac,
-			     struct h264_ctx *ctx,
-			     struct h264_macroblock *mb)
+			     const struct h264_ctx *ctx,
+			     const struct h264_macroblock *mb)
 {
 	int res = 0;
 	uint32_t raw_mb_type = 0;
@@ -804,9 +805,11 @@ out:
  * maxBinIdxCtx, and ctxIdxOffset
  */
 int h264_cabac_write_intra_chroma_pred_mode(struct h264_cabac *cabac,
-					    struct h264_ctx *ctx,
-					    struct h264_macroblock *mb)
+					    const struct h264_ctx *ctx,
+					    const struct h264_macroblock *mb)
 {
+	UNUSED(ctx);
+
 	int res = 0;
 	struct binstring bins;
 	CABAC_LOGV("%s", __func__);
@@ -828,9 +831,11 @@ out:
  * maxBinIdxCtx, and ctxIdxOffset
  */
 int h264_cabac_write_mb_qp_delta(struct h264_cabac *cabac,
-				 struct h264_ctx *ctx,
-				 struct h264_macroblock *mb)
+				 const struct h264_ctx *ctx,
+				 const struct h264_macroblock *mb)
 {
+	UNUSED(ctx);
+
 	int res = 0;
 	int32_t v = 0;
 	struct binstring bins;
@@ -857,8 +862,8 @@ out:
  * maxBinIdxCtx, and ctxIdxOffset
  */
 int h264_cabac_write_coded_block_flag(struct h264_cabac *cabac,
-				      struct h264_ctx *ctx,
-				      struct h264_macroblock *mb,
+				      const struct h264_ctx *ctx,
+				      const struct h264_macroblock *mb,
 				      uint32_t mode,
 				      int flag)
 {
@@ -914,8 +919,8 @@ out:
  * maxBinIdxCtx, and ctxIdxOffset
  */
 int h264_cabac_write_mb_skip_flag(struct h264_cabac *cabac,
-				  struct h264_ctx *ctx,
-				  struct h264_macroblock *mb,
+				  const struct h264_ctx *ctx,
+				  const struct h264_macroblock *mb,
 				  int flag)
 {
 	int res = 0;
@@ -955,10 +960,12 @@ out:
  * maxBinIdxCtx, and ctxIdxOffset
  */
 int h264_cabac_write_end_of_slice_flag(struct h264_cabac *cabac,
-				       struct h264_ctx *ctx,
-				       struct h264_macroblock *mb,
+				       const struct h264_ctx *ctx,
+				       const struct h264_macroblock *mb,
 				       int flag)
 {
+	UNUSED(ctx);
+
 	int res = 0;
 	struct binstring bins;
 	CABAC_LOGV("%s", __func__);

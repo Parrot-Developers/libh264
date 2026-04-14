@@ -222,7 +222,8 @@ static void h264_slice_group_map_type_6(struct h264_ctx *ctx)
  * 8.2.2.8 Specification for conversion of map unit to slice group map to
  *         macroblock to slice group map
  */
-static uint32_t h264_mb_to_slice_group(struct h264_ctx *ctx, uint32_t mbAddr)
+static uint32_t h264_mb_to_slice_group(const struct h264_ctx *ctx,
+				       uint32_t mbAddr)
 {
 	uint32_t PicWidthInMbs = ctx->sps_derived.PicWidthInMbs;
 
@@ -304,7 +305,7 @@ void h264_clear_slice_group_map(struct h264_ctx *ctx)
 /**
  * 8.2.2 Decoding process for macroblock to slice group map
  */
-uint32_t h264_next_mb_addr(struct h264_ctx *ctx, uint32_t mbAddr)
+uint32_t h264_next_mb_addr(const struct h264_ctx *ctx, uint32_t mbAddr)
 {
 	if (ctx->pps->num_slice_groups_minus1 == 0)
 		return mbAddr + 1;

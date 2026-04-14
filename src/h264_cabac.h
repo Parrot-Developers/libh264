@@ -35,50 +35,51 @@ struct h264_cabac {
 };
 
 
-void h264_cabac_init_states(struct h264_cabac *cabac, struct h264_ctx *ctx);
+void h264_cabac_init_states(struct h264_cabac *cabac,
+			    const struct h264_ctx *ctx);
 
 
 int h264_cabac_init_enc(struct h264_cabac *cabac,
-			struct h264_ctx *ctx,
+			const struct h264_ctx *ctx,
 			struct h264_bitstream *bs);
 
 
 int h264_cabac_init_dec(struct h264_cabac *cabac,
-			struct h264_ctx *ctx,
+			const struct h264_ctx *ctx,
 			struct h264_bitstream *bs);
 
 
 int h264_cabac_write_mb_type(struct h264_cabac *cabac,
-			     struct h264_ctx *ctx,
-			     struct h264_macroblock *mb);
+			     const struct h264_ctx *ctx,
+			     const struct h264_macroblock *mb);
 
 
 int h264_cabac_write_intra_chroma_pred_mode(struct h264_cabac *cabac,
-					    struct h264_ctx *ctx,
-					    struct h264_macroblock *mb);
+					    const struct h264_ctx *ctx,
+					    const struct h264_macroblock *mb);
 
 
 int h264_cabac_write_mb_qp_delta(struct h264_cabac *cabac,
-				 struct h264_ctx *ctx,
-				 struct h264_macroblock *mb);
+				 const struct h264_ctx *ctx,
+				 const struct h264_macroblock *mb);
 
 
 int h264_cabac_write_coded_block_flag(struct h264_cabac *cabac,
-				      struct h264_ctx *ctx,
-				      struct h264_macroblock *mb,
+				      const struct h264_ctx *ctx,
+				      const struct h264_macroblock *mb,
 				      uint32_t mode,
 				      int flag);
 
 
 int h264_cabac_write_mb_skip_flag(struct h264_cabac *cabac,
-				  struct h264_ctx *ctx,
-				  struct h264_macroblock *mb,
+				  const struct h264_ctx *ctx,
+				  const struct h264_macroblock *mb,
 				  int flag);
 
 
 int h264_cabac_write_end_of_slice_flag(struct h264_cabac *cabac,
-				       struct h264_ctx *ctx,
-				       struct h264_macroblock *mb,
+				       const struct h264_ctx *ctx,
+				       const struct h264_macroblock *mb,
 				       int flag);
 
 

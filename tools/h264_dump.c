@@ -38,12 +38,15 @@
 #	include <sys/mman.h>
 #endif
 
+#include <h264/h264.h>
+#include <json-c/json.h>
+
 #define ULOG_TAG h264_dump
 #include <ulog.h>
 ULOG_DECLARE_TAG(h264_dump);
 
-#include <h264/h264.h>
-#include <json-c/json.h>
+
+#define UNUSED(x) (void)(x)
 
 
 struct app {
@@ -199,6 +202,9 @@ static void nalu_end_cb(struct h264_ctx *ctx,
 			const struct h264_nalu_header *nh,
 			void *userdata)
 {
+	UNUSED(type);
+	UNUSED(nh);
+
 	int res = 0;
 	struct app *app = userdata;
 	json_object *jobj = NULL;
@@ -309,7 +315,8 @@ static void usage(char *prog_name)
 int main(int argc, char *argv[])
 {
 	int res = 0;
-	int idx, c;
+	int idx;
+	int c;
 	size_t off = 0;
 	struct h264_dump_cfg dump_cfg;
 	struct app app;
@@ -339,7 +346,6 @@ int main(int argc, char *argv[])
 		case 'h':
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
-			break;
 
 		case 'o':
 			app.outpath = optarg;
@@ -359,7 +365,6 @@ int main(int argc, char *argv[])
 		default:
 			usage(argv[0]);
 			exit(EXIT_FAILURE);
-			break;
 		}
 	}
 	if (argc - optind < 1) {

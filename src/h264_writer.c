@@ -82,7 +82,7 @@ static int h264_write_grey_i_slice_cabac(struct h264_bitstream *bs,
 {
 	int res = 0;
 	struct h264_cabac cabac;
-	struct h264_macroblock *mb = NULL;
+	const struct h264_macroblock *mb = NULL;
 
 	/* cabac_alignment_one_bit */
 	while (!h264_bs_byte_aligned(bs)) {
@@ -130,9 +130,11 @@ static int h264_write_grey_i_slice_cabac(struct h264_bitstream *bs,
 
 
 static int h264_write_grey_i_slice_cavlc(struct h264_bitstream *bs,
-					 struct h264_ctx *ctx,
+					 const struct h264_ctx *ctx,
 					 uint32_t mb_count)
 {
+	UNUSED(ctx);
+
 	int res = 0;
 
 	for (uint32_t i = 0; i < mb_count; i++) {
@@ -180,7 +182,7 @@ static int h264_write_skipped_p_slice_cabac(struct h264_bitstream *bs,
 {
 	int res = 0;
 	struct h264_cabac cabac;
-	struct h264_macroblock *mb = NULL;
+	const struct h264_macroblock *mb = NULL;
 
 	/* cabac_alignment_one_bit */
 	while (!h264_bs_byte_aligned(bs)) {
@@ -220,9 +222,11 @@ static int h264_write_skipped_p_slice_cabac(struct h264_bitstream *bs,
 
 
 static int h264_write_skipped_p_slice_cavlc(struct h264_bitstream *bs,
-					    struct h264_ctx *ctx,
+					    const struct h264_ctx *ctx,
 					    uint32_t mb_count)
 {
+	UNUSED(ctx);
+
 	int res = 0;
 
 	/* Slice data is simply mb_skip_run */

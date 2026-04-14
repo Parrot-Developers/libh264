@@ -159,7 +159,9 @@ next:
 int h264_find_nalu(const uint8_t *buf, size_t len, size_t *start, size_t *end)
 {
 	int res = 0;
-	size_t sc1 = 0, sc2 = 0, ec = 0;
+	size_t sc1 = 0;
+	size_t sc2 = 0;
+	size_t ec = 0;
 	ULOG_ERRNO_RETURN_ERR_IF(buf == NULL, EINVAL);
 	ULOG_ERRNO_RETURN_ERR_IF(start == NULL, EINVAL);
 	ULOG_ERRNO_RETURN_ERR_IF(end == NULL, EINVAL);
@@ -198,10 +200,8 @@ int h264_bs_read_bits_ue(struct h264_bitstream *bs, uint32_t *v)
 	}
 
 	bit = 0;
-	if (leadingzeros) {
-		if (h264_bs_read_bits(bs, &bit, leadingzeros) < 0)
-			return -EIO;
-	}
+	if (leadingzeros && (h264_bs_read_bits(bs, &bit, leadingzeros) < 0))
+		return -EIO;
 
 	*v = (1 << leadingzeros) - 1 + bit;
 	return leadingzeros * 2 + 1;
@@ -289,7 +289,8 @@ int h264_bs_write_bits_ue(struct h264_bitstream *bs, uint32_t v)
 
 int h264_bs_read_bits_ff_coded(struct h264_bitstream *bs, uint32_t *v)
 {
-	int res = 0, n = 0;
+	int res = 0;
+	int n = 0;
 	uint32_t bits = 0;
 	*v = 0;
 	do {
@@ -305,7 +306,8 @@ int h264_bs_read_bits_ff_coded(struct h264_bitstream *bs, uint32_t *v)
 
 int h264_bs_write_bits_ff_coded(struct h264_bitstream *bs, uint32_t v)
 {
-	int res = 0, n = 0;
+	int res = 0;
+	int n = 0;
 	uint32_t bits = 0;
 	do {
 		bits = v > 0xff ? 0xff : v;

@@ -97,6 +97,8 @@ static int h264_dump_json_pop(struct h264_dump *dump, json_object **jobj)
 
 static int h264_dump_json_begin_struct(struct h264_dump *dump, const char *name)
 {
+	UNUSED(name);
+
 	json_object *jobj = json_object_new_object();
 	h264_dump_json_push(dump, jobj);
 	return 0;
@@ -115,6 +117,8 @@ static int h264_dump_json_end_struct(struct h264_dump *dump, const char *name)
 
 static int h264_dump_json_begin_array(struct h264_dump *dump, const char *name)
 {
+	UNUSED(name);
+
 	json_object *jobj = json_object_new_array();
 	h264_dump_json_push(dump, jobj);
 	return 0;
@@ -156,6 +160,12 @@ static void extract_key(const char *field, char *key, size_t maxkey)
 	const char *start1 = NULL;
 	const char *start2 = NULL;
 	const char *end = NULL;
+
+	if ((field == NULL) || (key == NULL) || (maxkey == 0)) {
+		if (key && (maxkey > 0))
+			key[0] = '\0';
+		return;
+	}
 
 	/* Start after last '.' */
 	start1 = strrchr(field, '.');
