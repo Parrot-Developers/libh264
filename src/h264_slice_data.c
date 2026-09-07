@@ -1144,7 +1144,8 @@ int h264_new_macroblock(struct h264_ctx *ctx,
 	ctx->slice.mb_table.info[off].skipped = skipped;
 
 	/* Setup new macroblock */
-	mb = ctx->mb = &ctx->_mb;
+	ctx->mb = &ctx->_mb;
+	mb = ctx->mb;
 	memset(ctx->mb, 0, sizeof(*ctx->mb));
 	ctx->mb->mbAddr = mbAddr;
 	if (!skipped) {
@@ -1212,11 +1213,13 @@ int h264_new_macroblock(struct h264_ctx *ctx,
 
 	/* Setup some other variables */
 	if (!ctx->derived.MbaffFrameFlag || !mb->mb_field_decoding_flag) {
-		mb->max_ref_idx_0 = sh->num_ref_idx_l0_active_minus1;
-		mb->max_ref_idx_1 = sh->num_ref_idx_l1_active_minus1;
+		mb->max_ref_idx_0 = (uint8_t)sh->num_ref_idx_l0_active_minus1;
+		mb->max_ref_idx_1 = (uint8_t)sh->num_ref_idx_l1_active_minus1;
 	} else {
-		mb->max_ref_idx_0 = 2 * sh->num_ref_idx_l0_active_minus1 + 1;
-		mb->max_ref_idx_1 = 2 * sh->num_ref_idx_l1_active_minus1 + 1;
+		mb->max_ref_idx_0 =
+			(uint8_t)(2 * sh->num_ref_idx_l0_active_minus1 + 1);
+		mb->max_ref_idx_1 =
+			(uint8_t)(2 * sh->num_ref_idx_l1_active_minus1 + 1);
 	}
 
 	return 0;
@@ -1227,7 +1230,7 @@ int h264_set_nz_coeff(struct h264_ctx *ctx,
 		      uint32_t mbAddr,
 		      uint32_t comp,
 		      uint32_t idx,
-		      uint32_t n)
+		      uint8_t n)
 {
 	uint32_t off = h264_get_mb_addr_off(ctx, mbAddr);
 	ctx->slice.mb_table.info[off].nz_coeff[comp * 16 + idx] = n;
@@ -1373,7 +1376,8 @@ out:
 	if (res == 0) {
 		*trailing_ones = (coeff_token >> 5) & 0x3;
 		*total_coeff = coeff_token & 0x1f;
-		h264_set_nz_coeff(ctx, mb->mbAddr, comp, blkIdx, *total_coeff);
+		h264_set_nz_coeff(
+			ctx, mb->mbAddr, comp, blkIdx, (uint8_t)(*total_coeff));
 	}
 	return res;
 }

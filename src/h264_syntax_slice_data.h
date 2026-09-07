@@ -246,7 +246,7 @@ static int H264_SYNTAX_FCT(residual_block)(struct h264_bitstream *bs,
 
 static int H264_SYNTAX_FCT(residual_luma)(struct h264_bitstream *bs,
 					  struct h264_ctx *ctx,
-					  struct h264_macroblock *mb,
+					  const struct h264_macroblock *mb,
 					  int16_t i16x16DClevel[16],
 					  int16_t i16x16AClevel[16][15],
 					  int16_t level4x4[16][16],
@@ -449,8 +449,8 @@ static int H264_SYNTAX_FCT(sub_mb_pred)(struct h264_bitstream *bs,
 		H264_END_ARRAY(ref_idx_l0);
 	}
 
-	if ((sh->num_ref_idx_l1_active_minus1 > 0 ||
-			mb->mb_field_decoding_flag != sh->field_pic_flag)) {
+	if (sh->num_ref_idx_l1_active_minus1 > 0 ||
+			mb->mb_field_decoding_flag != sh->field_pic_flag) {
 		H264_BEGIN_ARRAY(ref_idx_l1);
 		for (uint32_t mbPartIdx = 0; mbPartIdx < 4; mbPartIdx++) {
 			if (mb->sub_mb_type[mbPartIdx] != SubMbType_B_Direct_8x8 &&
@@ -704,7 +704,6 @@ static int H264_SYNTAX_FCT(slice_data_internal)(struct h264_bitstream *bs,
 						void *userdata)
 {
 	int res = 0;
-	uint32_t i = 0;
 	uint32_t CurrMbAddr = 0;
 	int prev_mb_skipped = 0;
 	uint32_t mb_count = 0;
@@ -732,7 +731,7 @@ static int H264_SYNTAX_FCT(slice_data_internal)(struct h264_bitstream *bs,
 			H264_BEGIN_ARRAY_ITEM();
 			H264_FIELD(mb_skip_run, mb_skip_run);
 			H264_END_ARRAY_ITEM();
-			for (i = 0; i < mb_skip_run; i++) {
+			for (uint32_t i = 0; i < mb_skip_run; i++) {
 				h264_new_macroblock(ctx, CurrMbAddr, 1, -1);
 				H264_CB(ctx,
 					cbs,

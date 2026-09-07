@@ -570,8 +570,8 @@ static void binarize_u(uint32_t val, struct binstring *bins)
 {
 	if (val > 7)
 		ULOGW("%s:%d: val too big %u", __func__, __LINE__, val);
-	bins->value = ((1 << val) - 1) << 1;
-	bins->numbits = val + 1;
+	bins->value = (uint8_t)(((1U << val) - 1) << 1);
+	bins->numbits = (uint8_t)(val + 1);
 }
 
 
@@ -585,8 +585,8 @@ static void binarize_tu(uint32_t cMax, uint32_t val, struct binstring *bins)
 	if (val < cMax) {
 		binarize_u(val, bins);
 	} else {
-		bins->value = (1 << val) - 1;
-		bins->numbits = val;
+		bins->value = (uint8_t)((1U << val) - 1);
+		bins->numbits = (uint8_t)val;
 	}
 }
 
@@ -865,7 +865,7 @@ int h264_cabac_write_coded_block_flag(struct h264_cabac *cabac,
 				      const struct h264_ctx *ctx,
 				      const struct h264_macroblock *mb,
 				      uint32_t mode,
-				      int flag)
+				      uint8_t flag)
 {
 	int res = 0;
 	uint32_t ctxBlockCat = 0;
@@ -921,7 +921,7 @@ out:
 int h264_cabac_write_mb_skip_flag(struct h264_cabac *cabac,
 				  const struct h264_ctx *ctx,
 				  const struct h264_macroblock *mb,
-				  int flag)
+				  uint8_t flag)
 {
 	int res = 0;
 	struct binstring bins;
@@ -962,7 +962,7 @@ out:
 int h264_cabac_write_end_of_slice_flag(struct h264_cabac *cabac,
 				       const struct h264_ctx *ctx,
 				       const struct h264_macroblock *mb,
-				       int flag)
+				       uint8_t flag)
 {
 	UNUSED(ctx);
 

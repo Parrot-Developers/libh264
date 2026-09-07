@@ -195,7 +195,9 @@ static int
 			n++;
 	}
 
-	for (uint32_t i = 0; i < size && next != 0; i++) {
+	for (uint32_t i = 0; i < size; i++) {
+		if (next == 0)
+			break;
 		/* If following values are identical, encode a 0
 		 * and stop the loop */
 		next = i < size - n ? scaling_list[i] : 0;
@@ -267,7 +269,6 @@ static int H264_SYNTAX_FCT(sps)(struct h264_bitstream *bs,
 				H264_SYNTAX_CONST struct h264_sps *sps)
 {
 	int res = 0;
-	uint32_t i = 0;
 	uint32_t n = 0;
 
 	H264_BITS(sps->profile_idc, 8);
@@ -324,7 +325,9 @@ static int H264_SYNTAX_FCT(sps)(struct h264_bitstream *bs,
 				ARRAY_SIZE(sps->offset_for_ref_frame),
 			EIO);
 		H264_BEGIN_ARRAY(offset_for_ref_frame);
-		for (i = 0; i < sps->num_ref_frames_in_pic_order_cnt_cycle; i++)
+		for (uint32_t i = 0;
+		     i < sps->num_ref_frames_in_pic_order_cnt_cycle;
+		     i++)
 			H264_BITS_SE(sps->offset_for_ref_frame[i]);
 		H264_END_ARRAY(offset_for_ref_frame);
 	}
@@ -740,7 +743,7 @@ static int H264_SYNTAX_FCT(sei_data)(struct h264_bitstream *bs,
  */
 static int H264_SYNTAX_FCT(sei_filler_payload)(
 	struct h264_bitstream *bs,
-	struct h264_ctx *ctx,
+	const struct h264_ctx *ctx,
 	H264_SYNTAX_CONST struct h264_sei_filler_payload *sei)
 {
 	UNUSED(ctx);
@@ -888,6 +891,9 @@ static int H264_SYNTAX_FCT(sei)(struct h264_bitstream *bs,
 				const struct h264_ctx_cbs *cbs,
 				void *userdata)
 {
+	MAYBE_UNUSED(cbs);
+	MAYBE_UNUSED(userdata);
+
 	int res = 0;
 	uint32_t payload_type = 0;
 	uint32_t payload_size = 0;
@@ -1010,6 +1016,7 @@ static int H264_SYNTAX_FCT(aud)(struct h264_bitstream *bs,
  */
 static int H264_SYNTAX_FCT(filler)(struct h264_bitstream *bs, size_t *len)
 {
+	MAYBE_UNUSED(bs);
 	MAYBE_UNUSED(len);
 
 #if H264_SYNTAX_OP_KIND == H264_SYNTAX_OP_KIND_WRITE
@@ -1146,7 +1153,7 @@ static int
  */
 static int H264_SYNTAX_FCT(pred_weight_table)(
 	struct h264_bitstream *bs,
-	struct h264_ctx *ctx,
+	const struct h264_ctx *ctx,
 	H264_SYNTAX_CONST struct h264_slice_header *sh)
 {
 	int res = 0;
@@ -1234,7 +1241,7 @@ static int H264_SYNTAX_FCT(drpm_items)(
  */
 static int H264_SYNTAX_FCT(dec_ref_pic_marking)(
 	struct h264_bitstream *bs,
-	struct h264_ctx *ctx,
+	const struct h264_ctx *ctx,
 	H264_SYNTAX_CONST struct h264_slice_header *sh)
 {
 	int res = 0;

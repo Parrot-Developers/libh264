@@ -44,3 +44,34 @@ LOCAL_LIBRARIES := \
 	libh264 \
 	libulog
 include $(BUILD_EXECUTABLE)
+
+ifdef TARGET_TEST
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := tst-libh264
+LOCAL_CFLAGS := -std=gnu11
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/src
+# src/h264_fmo.c is compiled directly into the test binary (not just linked
+# from libh264.so): h264_gen_slice_group_map()/h264_next_mb_addr()/
+# h264_clear_slice_group_map() have no H264_API export attribute, so under
+# libh264's own -fvisibility=hidden they aren't visible to link against.
+LOCAL_SRC_FILES := \
+	src/h264_fmo.c \
+	tests/h264_test_bitstream.c \
+	tests/h264_test_ctx.c \
+	tests/h264_test_dump.c \
+	tests/h264_test_files.c \
+	tests/h264_test_fmo.c \
+	tests/h264_test_reader.c \
+	tests/h264_test_slice.c \
+	tests/h264_test_types.c \
+	tests/h264_test_writer.c \
+	tests/h264_test.c
+LOCAL_LIBRARIES := \
+	json \
+	libcunit \
+	libh264 \
+	libulog
+include $(BUILD_EXECUTABLE)
+
+endif

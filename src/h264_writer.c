@@ -359,7 +359,7 @@ int h264_rewrite_slice_header(struct h264_bitstream *bs,
 	/* Blend the last % 8 bits of the new slice header
 	 * with the first bits of the slice data */
 	if (tmp_bs.cachebits != 0) {
-		uint8_t mask = (1 << (8 - tmp_bs.cachebits)) - 1;
+		uint8_t mask = (uint8_t)((1U << (8 - tmp_bs.cachebits)) - 1);
 		bs->data[tmp_bs.off] =
 			(tmp_bs.cache & ~mask) | (bs->data[tmp_bs.off] & mask);
 	}

@@ -586,7 +586,7 @@ int h264_get_info_from_ps(const struct h264_sps *sps,
 
 	info->width = sps_derived->PicWidthInSamplesLuma;
 	info->height = sps_derived->FrameHeightInMbs * 16;
-	info->bit_depth_luma = sps_derived->BitDepthLuma;
+	info->bit_depth_luma = (uint8_t)sps_derived->BitDepthLuma;
 	info->crop_left = 0;
 	info->crop_top = 0;
 	info->crop_width = info->width;
@@ -639,7 +639,7 @@ int h264_get_info_from_ps(const struct h264_sps *sps,
 			info->framerate =
 				(info->num_units_in_tick != 0)
 					? (float)info->time_scale / 2.f /
-						  info->num_units_in_tick
+						  (float)info->num_units_in_tick
 					: 0.f;
 			info->framerate_num = info->time_scale;
 			info->framerate_den = info->num_units_in_tick;

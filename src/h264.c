@@ -258,7 +258,9 @@ int h264_byte_stream_to_avcc(uint8_t *data, size_t len)
 		} else {
 			nalu_len = next_start;
 		}
-		nalu_len_be = htonl(nalu_len);
+		if (nalu_len > UINT32_MAX)
+			return -ENOMEM;
+		nalu_len_be = htonl((uint32_t)nalu_len);
 		memcpy(data, &nalu_len_be, sizeof(uint32_t));
 		data += 4 + nalu_len;
 		len -= (4 + nalu_len);

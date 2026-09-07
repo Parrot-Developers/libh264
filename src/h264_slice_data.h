@@ -41,7 +41,7 @@ int h264_set_nz_coeff(struct h264_ctx *ctx,
 		      uint32_t mbAddr,
 		      uint32_t comp,
 		      uint32_t blkIdx,
-		      uint32_t n);
+		      uint8_t n);
 
 
 int h264_read_mb_type(struct h264_bitstream *bs,

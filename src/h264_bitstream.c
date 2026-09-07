@@ -194,7 +194,8 @@ int h264_bs_read_bits_ue(struct h264_bitstream *bs, uint32_t *v)
 	int leadingzeros = -1;
 	uint32_t bit = 0;
 
-	for (bit = 0; !bit; leadingzeros++) {
+	while (!bit) {
+		leadingzeros++;
 		if (h264_bs_read_bits(bs, &bit, 1) < 0)
 			return -EIO;
 	}
@@ -203,7 +204,7 @@ int h264_bs_read_bits_ue(struct h264_bitstream *bs, uint32_t *v)
 	if (leadingzeros && (h264_bs_read_bits(bs, &bit, leadingzeros) < 0))
 		return -EIO;
 
-	*v = (1 << leadingzeros) - 1 + bit;
+	*v = (1U << leadingzeros) - 1 + bit;
 	return leadingzeros * 2 + 1;
 }
 

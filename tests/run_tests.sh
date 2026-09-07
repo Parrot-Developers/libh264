@@ -38,7 +38,7 @@ WORK_DIR=${SCRIPT_PATH}/results
 mkdir -p ${WORK_DIR}
 
 for arg in "$@"; do
-	if [ -d "${arg}" ]; then
+	if [[ -d "${arg}" ]]; then
 		STREAM_DIR=$(realpath ${arg})
 		for stream in ${STREAM_DIR}/*; do
 			(cd ${WORK_DIR} && \

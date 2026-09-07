@@ -103,29 +103,37 @@ static void h264_slice_group_map_type_2(struct h264_ctx *ctx)
 static void h264_slice_group_map_type_3(struct h264_ctx *ctx)
 {
 	const struct h264_pps *pps = ctx->pps;
-	int direction_flag = pps->slice_group_change_direction_flag;
-	uint32_t PicWidthInMbs = ctx->sps_derived.PicWidthInMbs;
-	uint32_t PicHeightInMapUnits = ctx->sps_derived.PicHeightInMapUnits;
+	int32_t direction_flag = pps->slice_group_change_direction_flag;
+
+	int32_t PicWidthInMbs = (int32_t)ctx->sps_derived.PicWidthInMbs;
+	int32_t PicHeightInMapUnits =
+		(int32_t)ctx->sps_derived.PicHeightInMapUnits;
 	uint32_t PicSizeInMapUnits = ctx->sps_derived.PicSizeInMapUnits;
 	uint32_t MapUnitsInSliceGroup0 = ctx->derived.MapUnitsInSliceGroup0;
 
 	for (uint32_t i = 0; i < PicSizeInMapUnits; i++)
 		ctx->slice.group_map[i] = 1;
 
-	uint32_t x = (PicWidthInMbs - direction_flag) / 2;
-	uint32_t y = (PicHeightInMapUnits - direction_flag) / 2;
-	uint32_t left = x;
-	uint32_t top = y;
-	uint32_t right = x;
-	uint32_t bottom = y;
+	int32_t x = (PicWidthInMbs - direction_flag) / 2;
+	int32_t y = (PicHeightInMapUnits - direction_flag) / 2;
+	int32_t left = x;
+	int32_t top = y;
+	int32_t right = x;
+	int32_t bottom = y;
 	int32_t xDir = direction_flag - 1;
 	int32_t yDir = direction_flag;
 
 	uint32_t mapUnitVacant = 0;
 	for (uint32_t k = 0; k < MapUnitsInSliceGroup0; k += mapUnitVacant) {
-		if (ctx->slice.group_map[y * PicWidthInMbs + x] == 1) {
-			mapUnitVacant = 1;
-			ctx->slice.group_map[y * PicWidthInMbs + x] = 0;
+
+		if (x >= 0 && x < PicWidthInMbs && y >= 0 &&
+		    y < PicHeightInMapUnits) {
+			uint32_t index = (uint32_t)y * (uint32_t)PicWidthInMbs +
+					 (uint32_t)x;
+			mapUnitVacant =
+				(ctx->slice.group_map[index] == 1) ? 1 : 0;
+			if (mapUnitVacant)
+				ctx->slice.group_map[index] = 0;
 		} else {
 			mapUnitVacant = 0;
 		}

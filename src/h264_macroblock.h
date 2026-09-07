@@ -92,7 +92,7 @@ enum IntraChroma {
 
 /* clang-format off */
 struct h264_macroblock_info {
-	uint32_t mb_type:4;
+	uint32_t mb_type:5;
 	uint32_t intra_chroma_pred_mode:2;
 	uint32_t available:1;
 	uint32_t skipped:1;

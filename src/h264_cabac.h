@@ -68,19 +68,19 @@ int h264_cabac_write_coded_block_flag(struct h264_cabac *cabac,
 				      const struct h264_ctx *ctx,
 				      const struct h264_macroblock *mb,
 				      uint32_t mode,
-				      int flag);
+				      uint8_t flag);
 
 
 int h264_cabac_write_mb_skip_flag(struct h264_cabac *cabac,
 				  const struct h264_ctx *ctx,
 				  const struct h264_macroblock *mb,
-				  int flag);
+				  uint8_t flag);
 
 
 int h264_cabac_write_end_of_slice_flag(struct h264_cabac *cabac,
 				       const struct h264_ctx *ctx,
 				       const struct h264_macroblock *mb,
-				       int flag);
+				       uint8_t flag);
 
 
 #endif /* !_H264_CABAC_H_ */

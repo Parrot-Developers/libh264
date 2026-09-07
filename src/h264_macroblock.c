@@ -129,7 +129,8 @@ h264_get_neighbouring_locations_mbaff(const struct h264_ctx *ctx,
 		uint32_t mbAddrX = mb->mbAddrA;
 		if (mbAddrX == H264_MB_ADDR_INVALID) {
 			*mbAddrN = H264_MB_ADDR_INVALID;
-			*xW = *yW = 0;
+			*xW = 0;
+			*yW = 0;
 			return;
 		}
 		int mbAddrXFrameFlag = !mb->mbAddrAInfo->field_flag;
@@ -196,7 +197,8 @@ h264_get_neighbouring_locations_mbaff(const struct h264_ctx *ctx,
 				uint32_t mbAddrX = mb->mbAddrB;
 				if (mbAddrX == H264_MB_ADDR_INVALID) {
 					*mbAddrN = H264_MB_ADDR_INVALID;
-					*xW = *yW = 0;
+					*xW = 0;
+					*yW = 0;
 					return;
 				}
 				*mbAddrN = mb->mbAddrB + 1;
@@ -209,7 +211,8 @@ h264_get_neighbouring_locations_mbaff(const struct h264_ctx *ctx,
 			uint32_t mbAddrX = mb->mbAddrB;
 			if (mbAddrX == H264_MB_ADDR_INVALID) {
 				*mbAddrN = H264_MB_ADDR_INVALID;
-				*xW = *yW = 0;
+				*xW = 0;
+				*yW = 0;
 				return;
 			}
 			int mbAddrXFrameFlag = !mb->mbAddrBInfo->field_flag;

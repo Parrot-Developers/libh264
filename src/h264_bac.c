@@ -221,10 +221,10 @@ void h264_bac_state_init(struct h264_bac_state *state,
 	int32_t qp = Clip3(1, 51, SliceQPLuma);
 	int32_t idx = ((m * qp) >> 4) + n;
 	if (idx <= 63) {
-		state->idx = 63 - Max(1, idx);
+		state->idx = (uint8_t)(63 - Max(1, idx));
 		state->mps = 0;
 	} else {
-		state->idx = Min(126, idx) - 64;
+		state->idx = (uint8_t)(Min(126, idx) - 64);
 		state->mps = 1;
 	}
 }
